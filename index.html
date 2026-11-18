@@ -3,21 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WOZ-MON // PRE-APPLE I ROM MONITOR (1975)</title>
+<title>WOZ-DOS // 1975 RETRO KERNEL & SHELL</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
-  * {
-    box-sizing: border-box;
-    user-select: none;
-  }
+  * { box-sizing: border-box; user-select: none; }
 
   body {
-    background-color: #0d0d0d;
-    color: #33ff33;
-    font-family: 'VT323', 'Courier New', monospace;
+    background-color: #0b0f0b;
+    color: #00ff66;
+    font-family: 'VT323', monospace;
     margin: 0;
-    padding: 0;
+    padding: 20px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -25,405 +22,232 @@
     overflow: hidden;
   }
 
-  .monitor-casing {
-    background: #2b2927;
-    padding: 28px;
-    border-radius: 24px;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.9), inset 0 2px 5px rgba(255,255,255,0.15);
-    border: 4px solid #1a1918;
-    width: 95vw;
-    max-width: 920px;
-  }
-
-  .bezel {
-    background: #141414;
-    padding: 18px;
-    border-radius: 16px;
-    box-shadow: inset 0 0 25px #000;
-    position: relative;
-  }
-
-  .crt {
-    background-color: #031403;
+  .desktop {
+    background: #182018;
+    border: 4px solid #283828;
     border-radius: 12px;
-    padding: 20px;
-    height: 540px;
-    overflow-y: auto;
-    position: relative;
-    box-shadow: inset 0 0 50px rgba(0, 255, 0, 0.15);
-    text-shadow: 0 0 6px rgba(51, 255, 51, 0.75);
-    font-size: 22px;
-    line-height: 1.25;
-    letter-spacing: 1px;
+    width: 100%;
+    max-width: 960px;
+    height: 620px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0,255,102,0.15);
   }
 
-  /* Scanlines */
-  .crt::before {
+  .header-bar {
+    background: #283828;
+    color: #00ff66;
+    padding: 8px 16px;
+    font-size: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #385038;
+  }
+
+  .terminal-screen {
+    flex: 1;
+    background-color: #050805;
+    padding: 20px;
+    overflow-y: auto;
+    font-size: 22px;
+    line-height: 1.3;
+    position: relative;
+    box-shadow: inset 0 0 30px rgba(0,255,102,0.1);
+  }
+
+  /* CRT Scanlines */
+  .terminal-screen::before {
     content: " ";
     display: block;
-    position: fixed;
+    position: absolute;
     top: 0; left: 0; bottom: 0; right: 0;
-    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.35) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.04));
-    z-index: 10;
-    background-size: 100% 3px, 6px 100%;
+    background: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.25) 50%);
+    background-size: 100% 4px;
+    z-index: 5;
     pointer-events: none;
   }
 
-  .crt::-webkit-scrollbar {
-    width: 8px;
-  }
-  .crt::-webkit-scrollbar-thumb {
-    background: #1f7a1f;
-  }
-
-  .output-line {
-    white-space: pre-wrap;
-    word-break: break-all;
-    margin: 0;
-  }
+  .line { white-space: pre-wrap; word-break: break-all; margin: 0; }
 
   .input-row {
     display: flex;
     align-items: center;
+    margin-top: 4px;
   }
 
-  .prompt-char {
-    margin-right: 4px;
-  }
+  .prompt { margin-right: 6px; color: #00ff66; }
 
-  #cmd-input {
+  #cli-input {
     background: transparent;
     border: none;
-    color: #33ff33;
-    font-family: 'VT323', 'Courier New', monospace;
+    color: #00ff66;
+    font-family: 'VT323', monospace;
     font-size: 22px;
     outline: none;
     width: 100%;
-    text-transform: uppercase;
-    text-shadow: 0 0 6px rgba(51, 255, 51, 0.75);
     caret-color: transparent;
   }
 
   .cursor {
     display: inline-block;
-    width: 11px;
+    width: 10px;
     height: 20px;
-    background-color: #33ff33;
-    animation: blink 0.8s steps(2, start) infinite;
+    background-color: #00ff66;
+    animation: blink 0.8s infinite;
     vertical-align: middle;
-    margin-left: -4px;
-    box-shadow: 0 0 8px #33ff33;
+    margin-left: 2px;
   }
 
-  @keyframes blink {
-    to { visibility: hidden; }
-  }
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
-  .hardware-bar {
+  .taskbar {
+    background: #111811;
+    padding: 10px 16px;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 16px;
-    padding: 0 8px;
-    color: #a8a29e;
-    font-size: 16px;
+    gap: 12px;
+    border-top: 2px solid #283828;
   }
 
-  .badge {
-    background: #1c1a18;
-    border: 1px solid #44403c;
-    padding: 4px 12px;
-    border-radius: 4px;
-    letter-spacing: 2px;
-    color: #d6d3d1;
-    font-weight: bold;
-  }
-
-  .hw-buttons {
-    display: flex;
-    gap: 10px;
-  }
-
-  button.hw-btn {
-    background: #3f3b37;
-    color: #e7e5e4;
-    border: 2px solid #57534e;
-    border-radius: 4px;
-    padding: 5px 12px;
+  button.sys-btn {
+    background: #283828;
+    color: #00ff66;
+    border: 1px solid #385038;
+    padding: 6px 14px;
     font-family: 'VT323', monospace;
-    font-size: 17px;
+    font-size: 18px;
     cursor: pointer;
-    box-shadow: 0 3px 0 #1c1917;
-    transition: all 0.05s;
+    border-radius: 4px;
   }
-
-  button.hw-btn:active {
-    transform: translateY(3px);
-    box-shadow: 0 0 0 #1c1917;
-  }
-
-  button.hw-btn.reset {
-    background: #7f1d1d;
-    border-color: #991b1b;
-  }
+  button.sys-btn:hover { background: #385038; }
 </style>
 </head>
 <body>
 
-<div class="monitor-casing">
-  <div class="bezel">
-    <div class="crt" id="terminal" onclick="document.getElementById('cmd-input').focus()">
-      <div id="output"></div>
-      <div class="input-row">
-        <span class="prompt-char" id="prompt-symbol">\</span>
-        <span id="typed-text"></span><span class="cursor"></span>
-        <input type="text" id="cmd-input" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" autofocus>
-      </div>
+<div class="desktop">
+  <div class="header-bar">
+    <span>WOZ-DOS v1.0 (PRE-APPLE KERNEL - 1975)</span>
+    <span id="clock">00:00:00</span>
+  </div>
+  
+  <div class="terminal-screen" id="screen" onclick="document.getElementById('cli-input').focus()">
+    <div id="output"></div>
+    <div class="input-row">
+      <span class="prompt" id="prompt-label">A:\&gt;</span>
+      <span id="typed"></span><span class="cursor"></span>
+      <input type="text" id="cli-input" autocomplete="off" spellcheck="false" autofocus>
     </div>
   </div>
-  <div class="hardware-bar">
-    <div class="badge">MOS 6502 // 256-BYTE WOZ MONITOR (1975 PROTOTYPE)</div>
-    <div class="hw-buttons">
-      <button class="hw-btn" onclick="loadDemoProgram()">LOAD BASIC (E000R)</button>
-      <button class="hw-btn" onclick="showHelp()">HELP (?)</button>
-      <button class="hw-btn reset" onclick="hardwareReset()">RESET</button>
-      <button class="hw-btn" onclick="clearScreen()">CLEAR</button>
-    </div>
+
+  <div class="taskbar">
+    <button class="sys-btn" onclick="runCommand('HELP')">HIZLI YARDIM (?) APPROACH</button>
+    <button class="sys-btn" onclick="runCommand('DIR')">DOSYALAR (DIR)</button>
+    <button class="sys-btn" onclick="runCommand('GITHUB')">GITHUB REPO</button>
+    <button class="sys-btn" onclick="runCommand('CLS')">TEMIZLE</button>
   </div>
 </div>
 
 <script>
-  // 64KB Virtual Memory (0x0000 - 0xFFFF)
-  const memory = new Uint8Array(65536);
-  let lastAddress = 0x0000;
-  let storeAddress = 0x0000;
+  // Sanal Dosya Sistemi (In-Memory File System)
+  const fileSystem = {
+    "README.TXT": "WOZ-DOS 1975 Prototip Sistemine Hos Geldiniz.\nBu sistem Apple I oncesi doneme ait minimalist komut seti sunar.\n",
+    "APPLE.CFG": "KERNEL_TYPE=WOZ_MONITOR\nCPU=MOS_6502_EMULATOR\nMEMORY=4KB_RAM\nSTATUS=EXPERIMENTAL\n",
+    "NOTE.TXT": "GitHub uzerinden yayinlamak icin index.html dosyasini repoya ekleyin."
+  };
 
   const outputEl = document.getElementById('output');
-  const inputEl = document.getElementById('cmd-input');
-  const typedEl = document.getElementById('typed-text');
-  const terminalEl = document.getElementById('terminal');
+  const inputEl = document.getElementById('cli-input');
+  const typedEl = document.getElementById('typed');
+  const screenEl = document.getElementById('screen');
 
-  function initROM() {
-    memory.fill(0x00);
-    // Woz Monitor ROM (FF00 - FFFF) gercek hex baytlari
-    const wozMonBytes = [
-      0xD8, 0x58, 0xA0, 0x7F, 0x8C, 0x12, 0xD0, 0xA9, 0xA7, 0x8D, 0x11, 0xD0, 0x8D, 0x13, 0xD0, 0xC9,
-      0xDF, 0xF0, 0x13, 0xC9, 0x9B, 0xF0, 0x03, 0xC8, 0x10, 0x0F, 0xA9, 0xDC, 0x20, 0xEF, 0xFF, 0xA9,
-      0x8D, 0x20, 0xEF, 0xFF, 0xA0, 0x01, 0x88, 0x30, 0xF6, 0xAD, 0x11, 0xD0, 0x10, 0xFB, 0xAD, 0x10,
-      0xD0, 0x99, 0x00, 0x02, 0x20, 0xEF, 0xFF, 0xC9, 0x8D, 0xD0, 0xD4, 0xA0, 0xFF, 0xA9, 0x00, 0xAA
-    ];
-    for (let i = 0; i < wozMonBytes.length; i++) {
-      memory[0xFF00 + i] = wozMonBytes[i];
-    }
-    // Easter egg mesajlari bellek icinde
-    const msg = "1975 HOMEBREW COMPUTER CLUB - STEVE WOZNIAK 6502 BREADBOARD PROTOTYPE";
-    for (let i = 0; i < msg.length; i++) {
-      memory[0x0300 + i] = msg.charCodeAt(i);
-    }
-  }
-
-  function printLine(text = "") {
+  function print(text = "") {
     const div = document.createElement('div');
-    div.className = 'output-line';
+    div.className = 'line';
     div.textContent = text;
     outputEl.appendChild(div);
-    terminalEl.scrollTop = terminalEl.scrollHeight;
+    screenEl.scrollTop = screenEl.scrollHeight;
   }
 
-  function toHex(num, len = 2) {
-    return num.toString(16).toUpperCase().padStart(len, '0');
+  function boot() {
+    print("==================================================");
+    print("  WOZ-DOS KERNEL INITIALIZATION (OCTOBER 1975)    ");
+    print("  MOS 6502 MICROPROCESSOR SIMULATION ENGINE       ");
+    print("==================================================");
+    print("Sistem Bellegi: 4096 Bayt OK.");
+    print("Dosya Sistemi: Aktif. Yardim icin 'HELP' yazin.");
+    print("");
   }
 
-  function bootSequence() {
-    outputEl.innerHTML = "";
-    printLine("************************************************************");
-    printLine("*  MOS TECHNOLOGY 6502 BREADBOARD PROTOTYPE (OCTOBER 1975) *");
-    printLine("*  WOZ MONITOR v0.1 - PRE-APPLE I ROM SYSTEM (256 BYTES)   *");
-    printLine("************************************************************");
-    printLine("RAM: 4096 BYTES OK   |   ROM: $FF00-$FFFF   |   VIDEO: 40X24");
-    printLine("NO GRAPHICS. NO FILESYSTEM. NO MOUSE. PURE HEXADECIMAL.");
-    printLine("KOMUTLAR ICIN '?' YAZIP ENTER'A BASIN.");
-    printLine("");
-    printLine("\");
-  }
+  function runCommand(cmdStr) {
+    const raw = cmdStr.trim();
+    print("A:\\>" + raw);
+    const parts = raw.split(" ");
+    const cmd = parts[0].toUpperCase();
+    const arg1 = parts[1] || "";
+    const arg2 = parts.slice(2).join(" ");
 
-  function showHelp() {
-    printLine("");
-    printLine("--- WOZ MONITOR (1975) KULLANIM KILAVUZU ---");
-    printLine("1. BELLEK OKUMA     : FF00          -> FF00 adresindeki bayti gosterir");
-    printLine("2. ARALIK OKUMA     : FF00.FF1F     -> FF00 ile FF1F arasini doker");
-    printLine("3. BELLEGE YAZMA    : 0200: A9 42   -> 0200 adresine hex veri yazar");
-    printLine("4. PROGRAM CALISTIR : E000R         -> Belirtilen adresteki kodu calistirir");
-    printLine("5. ASCII DUMP       : 0300.0345A    -> Bellegi metin olarak okur");
-    printLine("6. TEMIZLE          : CLEAR         -> Ekrani siler");
-    printLine("-------------------------------------------");
-    printLine("\");
-  }
-
-  function executeCommand(raw) {
-    const cmd = raw.trim().toUpperCase();
-    printLine("\" + cmd);
-
-    if (!cmd) return;
-
-    if (cmd === "?" || cmd === "HELP") {
-      showHelp();
-      return;
-    }
-
-    if (cmd === "CLEAR" || cmd === "CLS") {
+    if (cmd === "HELP" || cmd === "?") {
+      print("Mevcut Komutlar:");
+      print("  DIR              - Tum dosyalari listeler");
+      print("  TYPE <dosya>     - Belge icerigini gosterir");
+      print("  EDIT <dosya> <metn> - Yeni belge olusturur veya duzenler");
+      print("  DEL <dosya>      - Dosya siler");
+      print("  GITHUB           - GitHub deposu baglantisini ve rehberini gosterir");
+      print("  CLS              - Ekrani temizler");
+      print("  VER              - Sistem surum bilgisini gosterir");
+    } else if (cmd === "DIR") {
+      print("Dizin: A:\\");
+      let count = 0;
+      let totalBytes = 0;
+      for (let f in fileSystem) {
+        print(`  ${f.padEnd(12)} ${fileSystem[f].length} BYTES`);
+        count++;
+        totalBytes += fileSystem[f].length;
+      }
+      print(`  Toplam ${count} dosya, ${totalBytes} bayt kullaniliyor.`);
+    } else if (cmd === "TYPE") {
+      if (!arg1) {
+        print("HATA: Dosya adi belirtilmedi. (Ornek: TYPE README.TXT)");
+      } else if (fileSystem[arg1.toUpperCase()]) {
+        print("--- " + arg1.toUpperCase() + " ---");
+        print(fileSystem[arg1.toUpperCase()]);
+      } else {
+        print("HATA: Dosya bulunamadi!");
+      }
+    } else if (cmd === "EDIT") {
+      if (!arg1) {
+        print("HATA Kullanim: EDIT <DOSYA_ADI> <METIN>");
+      } else {
+        const fname = arg1.toUpperCase();
+        const content = arg2 || "Bos Belge";
+        fileSystem[fname] = content + "\n";
+        print(`BASARILI: '${fname}' olusturuldu / guncellendi.`);
+      }
+    } else if (cmd === "DEL") {
+      if (fileSystem[arg1.toUpperCase()]) {
+        delete fileSystem[arg1.toUpperCase()];
+        print(`DOSYA SILINDI: ${arg1.toUpperCase()}`);
+      } else {
+        print("HATA: Boyle bir dosya yok.");
+      }
+    } else if (cmd === "GITHUB") {
+      print("=== GITHUB DEPO YAYINLAMA REHBERI ===");
+      print("1. GitHub'da yeni bir public repository olusturun.");
+      print("2. Bu kodu 'index.html' adiyla commit'leyin.");
+      print("3. Settings > Pages menusunden 'main' dalini secip aktif edin.");
+      print("Deponuz Apple oncesi tum retro kodlarinizla yayina hazirdir!");
+    } else if (cmd === "CLS") {
       outputEl.innerHTML = "";
-      return;
+    } else if (cmd === "VER") {
+      print("WOZ-DOS Kernel 0.95 (Pre-Apple Homebrew Edition)");
+    } else if (raw !== "") {
+      print(`HATA: Taninmayan komut '${raw}'. Yardim icin 'HELP' yazin.`);
     }
-
-    if (cmd === "RESET") {
-      hardwareReset();
-      return;
-    }
-
-    // ASCII Dump (Orn: 0300.0345A)
-    if (/^[0-9A-F]{1,4}\.[0-9A-F]{1,4}A$/.test(cmd)) {
-      const parts = cmd.slice(0, -1).split('.');
-      const start = parseInt(parts[0], 16);
-      const end = parseInt(parts[1], 16);
-      let str = "";
-      for (let addr = start; addr <= Math.min(end, start + 512); addr++) {
-        const c = memory[addr];
-        str += (c >= 32 && c <= 126) ? String.fromCharCode(c) : ".";
-      }
-      printLine(toHex(start, 4) + ": " + str);
-      return;
-    }
-
-    // Program Calistirma (Orn: E000R veya 0200R)
-    if (/^[0-9A-F]{1,4}R$/.test(cmd)) {
-      const addr = parseInt(cmd.slice(0, -1), 16);
-      printLine(toHex(addr, 4) + ": " + toHex(memory[addr]));
-      if (addr === 0xE000) {
-        startIntegerBasic();
-      } else {
-        printLine("EXECUTING 6502 MACHINE CODE AT $" + toHex(addr, 4) + "...");
-        printLine("BRK ($00) ENCOUNTERED - RETURNED TO MONITOR.");
-      }
-      return;
-    }
-
-    // Bellege Yazma (Orn: 0200: A9 01 8D 00)
-    if (cmd.includes(":")) {
-      const [addrPart, dataPart] = cmd.split(":");
-      const addr = parseInt(addrPart.trim(), 16);
-      if (isNaN(addr) || addr < 0 || addr > 0xFFFF) {
-        printLine("ERR: INVALID ADDRESS");
-        return;
-      }
-      storeAddress = addr;
-      const bytes = dataPart.trim().split(/\s+/).filter(Boolean);
-      let written = [];
-      for (let b of bytes) {
-        if (/^[0-9A-F]{1,2}$/.test(b)) {
-          const val = parseInt(b, 16);
-          memory[storeAddress] = val;
-          written.push(toHex(val));
-          storeAddress = (storeAddress + 1) & 0xFFFF;
-        } else {
-          printLine("ERR: SYNTAX (" + b + ")");
-          return;
-        }
-      }
-      printLine(toHex(addr, 4) + ": " + written.join(" "));
-      return;
-    }
-
-    // Aralik Okuma (Orn: FF00.FF1F)
-    if (/^[0-9A-F]{1,4}\.[0-9A-F]{1,4}$/.test(cmd)) {
-      const [startStr, endStr] = cmd.split(".");
-      const start = parseInt(startStr, 16);
-      const end = parseInt(endStr, 16);
-      if (end < start) {
-        printLine("ERR: RANGE");
-        return;
-      }
-      for (let addr = start; addr <= Math.min(end, start + 256); addr += 8) {
-        let line = toHex(addr, 4) + ":";
-        for (let offset = 0; offset < 8 && (addr + offset) <= end; offset++) {
-          line += " " + toHex(memory[addr + offset]);
-        }
-        printLine(line);
-      }
-      lastAddress = end;
-      return;
-    }
-
-    // Tekil Adres Okuma (Orn: FF00)
-    if (/^[0-9A-F]{1,4}$/.test(cmd)) {
-      const addr = parseInt(cmd, 16);
-      lastAddress = addr;
-      printLine(toHex(addr, 4) + ": " + toHex(memory[addr]));
-      return;
-    }
-
-    printLine("ERR: UNKNOWN HEX SYNTAX (TRY '?' FOR HELP)");
-  }
-
-  let basicMode = false;
-
-  function startIntegerBasic() {
-    basicMode = true;
-    document.getElementById('prompt-symbol').textContent = ">";
-    printLine("");
-    printLine("*** APPLE INTEGER BASIC (1976 CASSETTE LOAD) ***");
-    printLine("2048 BYTES FREE");
-    printLine("ORNEK: PRINT 2+2   VEYA   EXIT (MONITORA DON)");
-  }
-
-  function handleBasicCommand(raw) {
-    const cmd = raw.trim().toUpperCase();
-    printLine(">" + cmd);
-    if (cmd === "EXIT" || cmd === "BYE" || cmd === "MON") {
-      basicMode = false;
-      document.getElementById('prompt-symbol').textContent = "\";
-      printLine("RETURNED TO WOZ MONITOR.");
-      return;
-    }
-    if (cmd.startsWith("PRINT ")) {
-      const expr = cmd.slice(6).trim();
-      if (expr.startsWith('"') && expr.endsWith('"')) {
-        printLine(expr.slice(1, -1));
-      } else {
-        try {
-          if (/^[0-9+\-*/().\s]+$/.test(expr)) {
-            printLine(String(eval(expr)));
-          } else {
-            printLine("*** SYNTAX ERR");
-          }
-        } catch {
-          printLine("*** SYNTAX ERR");
-        }
-      }
-      return;
-    }
-    printLine("*** SYNTAX ERR (USE 'PRINT ...' OR 'EXIT')");
-  }
-
-  function loadDemoProgram() {
-    basicMode = false;
-    document.getElementById('prompt-symbol').textContent = "\";
-    executeCommand("E000R");
-  }
-
-  function hardwareReset() {
-    basicMode = false;
-    document.getElementById('prompt-symbol').textContent = "\";
-    initROM();
-    bootSequence();
-  }
-
-  function clearScreen() {
-    outputEl.innerHTML = "";
+    print("");
   }
 
   inputEl.addEventListener('input', () => {
-    typedEl.textContent = inputEl.value.toUpperCase();
+    typedEl.textContent = inputEl.value;
   });
 
   inputEl.addEventListener('keydown', (e) => {
@@ -431,16 +255,16 @@
       const val = inputEl.value;
       inputEl.value = '';
       typedEl.textContent = '';
-      if (basicMode) {
-        handleBasicCommand(val);
-      } else {
-        executeCommand(val);
-      }
+      runCommand(val);
     }
   });
 
-  initROM();
-  bootSequence();
+  setInterval(() => {
+    const d = new Date();
+    document.getElementById('clock').textContent = d.toTimeString().split(' ')[0];
+  }, 1000);
+
+  boot();
 </script>
 </body>
 </html>
