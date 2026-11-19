@@ -1,0 +1,72 @@
+BYSAM ADMIN + SUPABASE KURULUMU
+================================
+
+DOSYALAR
+- admin.html       : Modern yonetim paneli
+- bysam.sql        : Veritabani, RLS ve Storage kurulumu
+- bysam-runtime.js : BYSAM aramasinin yayinli siteleri acmasi icin runtime
+
+1) SUPABASE SQL
+Supabase projesini ac > SQL Editor > New query.
+bysam.sql dosyasinin tamamini yapistir ve Run'a bas.
+
+2) YONETICI HESABI
+Supabase > Authentication > Users > Add user bolumunden yonetici e-posta/sifre hesabini olustur.
+Sonra SQL Editor'de su sorguyu kendi e-posta adresinle calistir:
+
+insert into public.bysam_admins (user_id)
+select id from auth.users where lower(email) = lower('ADMIN_EPOSTA_ADRESIN')
+on conflict (user_id) do nothing;
+
+3) ADMIN PANELI
+admin.html dosyasini bir web sunucusunda veya GitHub Pages uzerinde ac.
+Yerel dosyadan (file://) acmak yerine VS Code Live Server gibi bir yerel web sunucusu kullan.
+Yonetici e-posta ve sifrenle giris yap.
+
+4) SITE YAYINLAMA
+Yeni site olustur. Site adini ve kisa adresini yaz, uzantisini sec.
+Site dosyalarini birlikte sec/yukle. Ana dosyanin adi kok dizinde index.html olmali.
+Ornek dosya yapisi:
+  index.html
+  assets/style.css
+  assets/app.js
+  images/logo.png
+HTML icinde dosyalara goreli yollarla referans ver:
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="assets/app.js"></script>
+  <img src="images/logo.png" alt="Logo">
+Yayina almak icin durum alanini "Yayinda" sec.
+
+5) BYSAM ARAMA EKRANINA BAGLAMA
+BYSAM ana uygulamasinda arama sonucunu gosterecek bir kapsayici bulunmali:
+  <input id="bysam-search" placeholder="Site adi veya adres ara">
+  <button id="bysam-search-button">Ara</button>
+  <div id="bysam-site-view"></div>
+
+Mevcut BYSAM uygulamasinin JavaScript modulune su kodu ekle:
+  import { searchSites, mountSite } from './bysam-runtime.js';
+  const input = document.querySelector('#bysam-search');
+  document.querySelector('#bysam-search-button').addEventListener('click', async () => {
+    try {
+      const results = await searchSites(input.value);
+      if (!results.length) throw new Error('Site bulunamadi.');
+      await mountSite(results[0].domain, document.querySelector('#bysam-site-view'));
+    } catch (error) {
+      alert(error.message);
+    }
+  });
+Bu runtime baglantisi eklenmeden admin paneline kaydedilen siteler veritabaninda durur,
+ancak BYSAM'in mevcut arama ekraninda kendiliginden gorunmez.
+
+GUVENLIK
+- Tarayiciya yalnizca Supabase URL ve publishable key konur.
+- service_role / secret key'i HTML, JS veya GitHub'a koyma.
+- BYSAM yonetici yetkisi bysam_admins tablosuyla kontrol edilir.
+- Yayinlanan sitelerin dosyalari public olur; site dosyalarina gizli bilgi koyma.
+- BYSAM ic alan adi uzantilari (.bysam, .bysm vb.) BYSAM arama sisteminin mantiksal adresleridir;
+  gercek DNS alan adi veya otomatik internet alan adi satin alinmasi degildir.
+
+NOT
+Gonderdigin APPLE-main ZIP'indeki index.html dosyasi BERAY-OS 1975 arayuzudur.
+Bu paket onu degistirmez. BYSAM arama ekrani o dosyada bulunmadigi icin runtime modulu
+mevcut BYSAM arama ekranina baglanmalidir.
