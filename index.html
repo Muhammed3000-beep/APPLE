@@ -1,0 +1,2423 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BERAY-OS 1975 v3.0 // BERAY COMPUTER CORP.</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+  :root {
+    --fg: #33ff66;
+    --dim: #147a2e;
+    --bg: #030a04;
+    --panel: #071409;
+    --title-bg: #33ff66;
+    --title-fg: #030a04;
+    --glow: 0 0 8px rgba(51, 255, 102, 0.55);
+    --shadow-color: rgba(0, 0, 0, 0.9);
+  }
+
+  body.theme-amber {
+    --fg: #ffb000;
+    --dim: #805800;
+    --bg: #0c0700;
+    --panel: #170e00;
+    --title-bg: #ffb000;
+    --title-fg: #0c0700;
+    --glow: 0 0 8px rgba(255, 176, 0, 0.55);
+  }
+
+  body.theme-paper {
+    --fg: #111111;
+    --dim: #777777;
+    --bg: #e5e2dc;
+    --panel: #f4f2ed;
+    --title-bg: #111111;
+    --title-fg: #f4f2ed;
+    --glow: none;
+    --shadow-color: rgba(0, 0, 0, 0.35);
+  }
+
+  * {
+    box-sizing: border-box;
+    font-family: 'VT323', 'Courier New', monospace;
+  }
+
+  body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg);
+    color: var(--fg);
+    overflow: hidden;
+    user-select: none;
+    transition: background-color 0.2s, color 0.2s;
+  }
+
+  /* CRT Efektleri */
+  .crt-shell {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .crt-scanlines {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.26) 50%),
+                linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.015), rgba(0, 0, 255, 0.03));
+    background-size: 100% 3px, 6px 100%;
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  body.theme-paper .crt-scanlines {
+    background: linear-gradient(rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.04) 50%);
+    background-size: 100% 3px;
+  }
+
+  body.no-scanlines .crt-scanlines { display: none; }
+
+  .crt-vignette {
+    position: fixed;
+    inset: 0;
+    box-shadow: inset 0 0 70px rgba(0, 0, 0, 0.72);
+    pointer-events: none;
+    z-index: 9998;
+  }
+
+  body.theme-paper .crt-vignette,
+  body.no-scanlines .crt-vignette { box-shadow: none; }
+
+  .glow { text-shadow: var(--glow); }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: var(--bg); border-left: 1px solid var(--dim); }
+  ::-webkit-scrollbar-thumb { background: var(--dim); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--fg); }
+
+  /* Üst Menü Çubuğu */
+  .top-bar {
+    height: 36px;
+    background: var(--panel);
+    border-bottom: 2px solid var(--fg);
+    padding: 0 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 20px;
+    z-index: 5000;
+    position: relative;
+  }
+
+  .menu-left, .menu-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .menu-btn {
+    background: transparent;
+    border: none;
+    color: var(--fg);
+    font-size: 20px;
+    padding: 2px 8px;
+    cursor: pointer;
+    border-radius: 3px;
+  }
+  .menu-btn:hover {
+    background: var(--fg);
+    color: var(--bg);
+  }
+  .menu-btn.brand {
+    font-weight: bold;
+    letter-spacing: 1px;
+  }
+
+  .top-dropdown {
+    position: absolute;
+    top: 36px;
+    background: var(--panel);
+    border: 2px solid var(--fg);
+    min-width: 240px;
+    z-index: 6000;
+    box-shadow: 5px 5px 0 var(--shadow-color);
+  }
+  .top-dropdown.hidden { display: none; }
+
+  .dd-item {
+    padding: 6px 12px;
+    font-size: 19px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .dd-item:hover {
+    background: var(--fg);
+    color: var(--bg);
+  }
+  .dd-sep {
+    border-top: 1px solid var(--dim);
+    margin: 3px 0;
+  }
+
+  /* Masaüstü */
+  .desktop-area {
+    flex: 1;
+    position: relative;
+    padding: 14px;
+    overflow: hidden;
+  }
+
+  .icon-grid {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(4, 1fr);
+    gap: 10px;
+    width: max-content;
+  }
+
+  @media (min-width: 640px) {
+    .icon-grid { grid-template-rows: repeat(4, 1fr); gap: 12px; }
+  }
+
+  .desk-icon {
+    width: 98px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 8px 4px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .desk-icon:hover {
+    border-color: var(--dim);
+    background: rgba(128, 128, 128, 0.12);
+  }
+  .desk-icon.selected {
+    border-color: var(--fg);
+    background: rgba(128, 128, 128, 0.22);
+  }
+
+  .icon-box {
+    width: 48px;
+    height: 48px;
+    border: 2px solid var(--fg);
+    background: var(--panel);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 5px;
+    box-shadow: 2px 2px 0 var(--dim);
+  }
+
+  .icon-label {
+    font-size: 18px;
+    line-height: 1.1;
+  }
+
+  /* Pencereler */
+  .os-win {
+    position: absolute;
+    background: var(--panel);
+    border: 2px solid var(--fg);
+    box-shadow: 6px 6px 0 var(--shadow-color);
+    display: flex;
+    flex-direction: column;
+    border-radius: 4px;
+    overflow: hidden;
+    min-width: 300px;
+    min-height: 220px;
+  }
+  .os-win.hidden { display: none; }
+  .os-win.active {
+    box-shadow: 0 0 18px rgba(51, 255, 102, 0.22), 8px 8px 0 var(--shadow-color);
+  }
+  body.theme-amber .os-win.active {
+    box-shadow: 0 0 18px rgba(255, 176, 0, 0.22), 8px 8px 0 var(--shadow-color);
+  }
+  body.theme-paper .os-win.active {
+    box-shadow: 8px 8px 0 var(--shadow-color);
+  }
+
+  .os-win.maximized {
+    top: 36px !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: calc(100vh - 80px) !important;
+    border-radius: 0;
+  }
+
+  .win-header {
+    background: var(--title-bg);
+    color: var(--title-fg);
+    padding: 3px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: grab;
+    font-size: 20px;
+    font-weight: bold;
+    border-bottom: 2px solid var(--fg);
+  }
+  .win-header:active { cursor: grabbing; }
+  .os-win:not(.active) .win-header {
+    background: var(--dim);
+    color: var(--bg);
+  }
+
+  .win-ctrls {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .win-ctrl-btn {
+    background: var(--bg);
+    color: var(--fg);
+    border: 1px solid var(--bg);
+    padding: 0 7px;
+    font-size: 17px;
+    cursor: pointer;
+    border-radius: 2px;
+    line-height: 1.2;
+    font-weight: bold;
+  }
+  .win-ctrl-btn:hover { filter: invert(1); }
+  .win-ctrl-btn.close-btn:hover {
+    background: #dc2626;
+    color: #fff;
+    filter: none;
+  }
+
+  .win-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 10px;
+    font-size: 19px;
+    position: relative;
+  }
+
+  .win-resizer {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 16px;
+    height: 16px;
+    cursor: nwse-resize;
+    background: linear-gradient(135deg, transparent 50%, var(--fg) 50%);
+    opacity: 0.75;
+    z-index: 20;
+  }
+  .os-win.maximized .win-resizer { display: none; }
+
+  /* Retro Buton ve Form Elemanları */
+  .retro-btn {
+    background: var(--bg);
+    color: var(--fg);
+    border: 1px solid var(--fg);
+    padding: 3px 10px;
+    font-size: 18px;
+    cursor: pointer;
+    border-radius: 3px;
+    box-shadow: 2px 2px 0 var(--dim);
+    transition: transform 0.05s;
+  }
+  .retro-btn:hover {
+    background: var(--fg);
+    color: var(--bg);
+  }
+  .retro-btn:active { transform: translate(1px, 1px); }
+  .retro-btn.active-tool {
+    background: var(--fg);
+    color: var(--bg);
+    font-weight: bold;
+  }
+
+  .retro-input {
+    background: var(--bg);
+    color: var(--fg);
+    border: 1px solid var(--fg);
+    padding: 4px 8px;
+    font-size: 19px;
+    outline: none;
+  }
+
+  /* Görev Çubuğu */
+  .dock-bar {
+    height: 44px;
+    background: var(--panel);
+    border-top: 2px solid var(--fg);
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 5000;
+  }
+
+  .dock-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 4px 0;
+  }
+
+  .dock-sep {
+    width: 2px;
+    height: 24px;
+    background: var(--dim);
+    margin: 0 4px;
+    flex-shrink: 0;
+  }
+
+  /* BIOS / POST Açılış Ekranı */
+  #boot-screen {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 9000;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 24px 36px;
+  }
+  #boot-screen.hidden { display: none; }
+
+  .ascii-logo {
+    font-size: 15px;
+    line-height: 1.05;
+    white-space: pre;
+    margin: 0 0 12px 0;
+    overflow-x: auto;
+  }
+  @media (min-width: 768px) {
+    .ascii-logo { font-size: 19px; }
+  }
+
+  @keyframes crtTurnOn {
+    0% { transform: scale(1, 0.005); filter: brightness(8); }
+    45% { transform: scale(1, 0.005); filter: brightness(5); }
+    70% { transform: scale(1, 1); filter: brightness(1.4); }
+    100% { transform: scale(1, 1); filter: brightness(1); }
+  }
+  .crt-warmup {
+    animation: crtTurnOn 0.7s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+  }
+
+  /* Özel Diyalog Kutusu */
+  #modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.78);
+    z-index: 8500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  #modal-overlay.hidden { display: none; }
+
+  .modal-card {
+    background: var(--panel);
+    border: 2px solid var(--fg);
+    border-radius: 4px;
+    max-width: 440px;
+    width: 100%;
+    padding: 18px;
+    box-shadow: 8px 8px 0 rgba(0,0,0,0.85);
+  }
+
+  /* Masaüstü Sağ Alt Filigran */
+  .desktop-watermark {
+    position: absolute;
+    bottom: 14px;
+    right: 16px;
+    border: 1px solid var(--dim);
+    background: var(--panel);
+    padding: 10px 14px;
+    border-radius: 4px;
+    text-align: right;
+    pointer-events: none;
+    opacity: 0.9;
+  }
+  @media (max-width: 900px) {
+    .desktop-watermark { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="crt-root" class="crt-shell crt-warmup">
+  <div class="crt-scanlines"></div>
+  <div class="crt-vignette"></div>
+
+  <!-- 1. BIOS / POST AÇILIŞ EKRANI -->
+  <div id="boot-screen">
+    <div>
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; border-bottom:2px solid var(--fg); padding-bottom:10px; margin-bottom:14px;">
+        <div>
+          <pre class="ascii-logo glow">
+██████╗ ███████╗██████╗  █████╗ ██╗   ██╗       ██████╗ ███████╗
+██╔══██╗██╔════╝██╔══██╗██╔══██╗╚██╗ ██╔╝      ██╔═══██╗██╔════╝
+██████╔╝█████╗  ██████╔╝███████║ ╚████╔╝ █████╗██║   ██║███████╗
+██╔══██╗██╔══╝  ██╔══██╗██╔══██║  ╚██╔╝  ╚════╝██║   ██║╚════██║
+██████╔╝███████╗██║  ██║██║  ██║   ██║         ╚██████╔╝███████║
+╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝          ╚═════╝ ╚══════╝</pre>
+          <div style="font-size:21px; opacity:0.9;">BERAY COMPUTER CORP. // BERAY-OS v3.0 (1975 PROTOTYPE KERNEL)</div>
+        </div>
+        <button onclick="skipBoot()" class="retro-btn" style="font-size:20px; padding:6px 14px; font-weight:bold;">AÇILIŞI ATLA [SKIP] &gt;&gt;</button>
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px; border:1px solid var(--dim); background:var(--panel); padding:10px; margin-bottom:16px; font-size:20px;">
+        <div>İŞLEMCİ: <b>MOS 6502 @ 1.023 MHz</b></div>
+        <div>BELLEK TESTİ: <b id="boot-ram">00000</b> / 65536 BAYT</div>
+        <div>SÜRÜCÜLER: <b>DİSK A:\ &amp; DİSK B:\</b></div>
+      </div>
+
+      <div id="boot-logs" style="font-size:21px; line-height:1.4;" class="glow"></div>
+    </div>
+
+    <div style="max-width:640px; width:100%;">
+      <div style="display:flex; justify-content:space-between; font-size:20px; margin-bottom:4px;">
+        <span>BERAY-DOS ÇEKİRDEĞİ VE PENCERE YÖNETİCİSİ YÜKLENİYOR...</span>
+        <span id="boot-pct">0%</span>
+      </div>
+      <div style="width:100%; height:22px; border:2px solid var(--fg); padding:2px;">
+        <div id="boot-bar" style="height:100%; background:var(--fg); width:0%; transition:width 0.1s;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. ÜST MENÜ ÇUBUĞU -->
+  <header class="top-bar">
+    <div class="menu-left">
+      <button class="menu-btn brand" onclick="toggleDropdown('dd-beray', event)">◈ BERAY</button>
+      <button class="menu-btn" onclick="toggleDropdown('dd-apps', event)">Uygulamalar</button>
+      <button class="menu-btn" onclick="toggleDropdown('dd-disk', event)">Disket</button>
+      <button class="menu-btn" onclick="launchApp('settings')">Sistem &amp; GitHub</button>
+    </div>
+
+    <div class="menu-right">
+      <span id="sys-stats" style="font-size:17px; opacity:0.85;">CPU:%11 RAM:18KB</span>
+      <button id="btn-sound" class="retro-btn" style="padding:1px 8px; font-size:16px;" onclick="toggleAudio()">🔊 SES</button>
+      <span id="sys-clock" class="glow" style="font-weight:bold;">00:00:00</span>
+    </div>
+
+    <!-- BERAY Sistem Menüsü -->
+    <div id="dd-beray" class="top-dropdown hidden" style="left:10px;">
+      <div class="dd-item" onclick="showAboutModal()"><span>BERAY-OS 1975 Hakkında</span><span>v3.0</span></div>
+      <div class="dd-sep"></div>
+      <div class="dd-item" onclick="setTheme('green')"><span>Tema: Yeşil Fosfor (1975)</span><span>●</span></div>
+      <div class="dd-item" onclick="setTheme('amber')"><span>Tema: Sıcak Kehribar</span><span>●</span></div>
+      <div class="dd-item" onclick="setTheme('paper')"><span>Tema: 1975 Kağıt Beyazı</span><span>●</span></div>
+      <div class="dd-item" onclick="toggleScanlines()"><span>CRT Tarama Çizgileri</span><span>≡</span></div>
+      <div class="dd-sep"></div>
+      <div class="dd-item" onclick="triggerReboot()"><span>Bilgisayarı Yeniden Başlat</span><span>↻</span></div>
+    </div>
+
+    <!-- Uygulamalar Menüsü -->
+    <div id="dd-apps" class="top-dropdown hidden" style="left:105px;">
+      <div class="dd-item" onclick="launchApp('files')"><span>Disket Sürücü (BERAY-FS)</span><span>▤</span></div>
+      <div class="dd-item" onclick="launchApp('writer')"><span>BERAY-Write Editör</span><span>✎</span></div>
+      <div class="dd-item" onclick="launchApp('terminal')"><span>BERAY-Terminal &amp; BASIC</span><span>&gt;_</span></div>
+      <div class="dd-item" onclick="launchApp('paint')"><span>BERAY-Paint (32x32)</span><span>▦</span></div>
+      <div class="dd-item" onclick="launchApp('debug')"><span>BERAY-Debug (6502 ASM)</span><span>⚙</span></div>
+      <div class="dd-item" onclick="launchApp('hunt')"><span>Hunt the Wumpus (1975)</span><span>★</span></div>
+      <div class="dd-item" onclick="launchApp('net')"><span>BERAY-Net (BBS/ARPANET)</span><span>☎</span></div>
+    </div>
+
+    <!-- Disket Menüsü -->
+    <div id="dd-disk" class="top-dropdown hidden" style="left:225px;">
+      <div class="dd-item" onclick="promptCreateFile('A:')"><span>Yeni Metin/Kod Dosyası</span><span>+</span></div>
+      <div class="dd-item" onclick="launchApp('paint')"><span>Yeni Piksel Çizimi (.ART)</span><span>▦</span></div>
+      <div class="dd-item" onclick="launchApp('files')"><span>Disket Yöneticisini Aç</span><span>▤</span></div>
+      <div class="dd-sep"></div>
+      <div class="dd-item" onclick="exportFullDiskBackup()"><span>Tüm Disket Yedeğini İndir</span><span>⬇</span></div>
+    </div>
+  </header>
+
+  <!-- 3. MASAÜSTÜ ALANI -->
+  <main id="desktop" class="desktop-area" onclick="closeDropdowns()">
+    <div class="icon-grid">
+      <div class="desk-icon" onclick="selectIcon(this)" ondblclick="launchApp('files')">
+        <div class="icon-box">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        </div>
+        <span class="icon-label glow">Disket Sürücü<br>(BERAY-FS)</span>
+      </div>
+
+      <div class="desk-icon" onclick="selectIcon(this)" ondblclick="launchApp('writer')">
+        <div class="icon-box">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </div>
+        <span class="icon-label glow">BERAY-Write<br>Editör</span>
+      </div>
+
+      <div class="desk-icon" onclick="selectIcon(this)" ondblclick="launchApp('terminal')">
+        <div class="icon-box">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+        </div>
+        <span class="icon-label glow">BERAY-Term<br>&amp; BASIC</span>
+      </div>
+
+      <div class="desk-icon" onclick="selectIcon(this)" ondblclick="launchApp('paint')">
+        <div class="icon-box">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+        </div>
+        <span class="icon-label glow">BERAY-Paint<br>32x32</span>
+      </div>
+
+      <div class="desk-icon" onclick="selectIcon(this)" ondblclick="launchApp('debug')">
+        <div class="icon-box">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/></svg>
+        </div>
+        <span class="icon-label glow">BERAY-Debug<br>6502 ASM</span>
+      </div>
+
+      <div class="desk-icon" onclick="selectIcon(this)" ondblclick="launchApp('hunt')">
+        <div class="icon-box">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        </div>
+        <span class="icon-label glow">Hunt the<br>Wumpus</span>
+      </div>
+
+      <div class="desk-icon" onclick="selectIcon(this)" ondblclick="launchApp('net')">
+        <div class="icon-box">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </div>
+        <span class="icon-label glow">BERAY-Net<br>1975 BBS</span>
+      </div>
+
+      <div class="desk-icon" onclick="selectIcon(this)" ondblclick="launchApp('settings')">
+        <div class="icon-box">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </div>
+        <span class="icon-label glow">Sistem &amp;<br>GitHub Yayın</span>
+      </div>
+    </div>
+
+    <div class="desktop-watermark">
+      <div style="font-size:21px; font-weight:bold;" class="glow">BERAY COMPUTER CORP. (1975)</div>
+      <div style="font-size:17px; opacity:0.85;">BERAY-OS v3.0 // MOS 6502 WORKSTATION</div>
+      <div style="font-size:16px; opacity:0.75;">Simgelere Çift Tıklayın veya Görev Çubuğunu Kullanın</div>
+    </div>
+
+    <div id="win-layer"></div>
+  </main>
+
+  <!-- 4. ALT GÖREV ÇUBUĞU (TASKBAR) -->
+  <footer class="dock-bar">
+    <div class="dock-left">
+      <button class="retro-btn" style="padding:2px 8px; font-size:17px; flex-shrink:0;" onclick="launchApp('files')">▤ Disket</button>
+      <button class="retro-btn" style="padding:2px 8px; font-size:17px; flex-shrink:0;" onclick="launchApp('writer')">✎ Write</button>
+      <button class="retro-btn" style="padding:2px 8px; font-size:17px; flex-shrink:0;" onclick="launchApp('terminal')">&gt;_ Term</button>
+      <button class="retro-btn" style="padding:2px 8px; font-size:17px; flex-shrink:0;" onclick="launchApp('paint')">▦ Paint</button>
+      <button class="retro-btn" style="padding:2px 8px; font-size:17px; flex-shrink:0;" onclick="launchApp('debug')">⚙ Debug</button>
+      <button class="retro-btn" style="padding:2px 8px; font-size:17px; flex-shrink:0;" onclick="launchApp('hunt')">★ Wumpus</button>
+      <button class="retro-btn" style="padding:2px 8px; font-size:17px; flex-shrink:0;" onclick="launchApp('net')">☎ Net</button>
+      <div class="dock-sep"></div>
+      <div id="dock-tasks" style="display:flex; gap:6px; align-items:center;"></div>
+    </div>
+    <div id="status-toast" style="font-size:18px; font-weight:bold; padding-left:8px; white-space:nowrap;">BERAY-OS HAZIR</div>
+  </footer>
+
+  <!-- Özel Modal Penceresi -->
+  <div id="modal-overlay" class="hidden">
+    <div class="modal-card">
+      <div id="modal-title" style="font-size:23px; font-weight:bold; border-bottom:1px solid var(--fg); padding-bottom:6px; margin-bottom:10px;" class="glow">BERAY-OS İLETİSİ</div>
+      <div id="modal-msg" style="font-size:20px; margin-bottom:14px; white-space:pre-wrap;"></div>
+      <input id="modal-input" type="text" class="retro-input hidden" style="width:100%; margin-bottom:14px;" />
+      <div style="display:flex; justify-content:flex-end; gap:10px;">
+        <button id="modal-cancel" class="retro-btn">İPTAL</button>
+        <button id="modal-ok" class="retro-btn" style="font-weight:bold;">TAMAM</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===================== 1. RETRO WEB AUDIO SES SİSTEMİ ===================== */
+let soundEnabled = true;
+let audioCtx = null;
+
+function beep(freq = 520, dur = 0.05, type = 'square', vol = 0.035) {
+  if (!soundEnabled) return;
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + dur);
+  } catch (e) {}
+}
+
+function diskSound() {
+  beep(150, 0.025, 'sawtooth', 0.025);
+  setTimeout(() => beep(230, 0.02, 'square', 0.02), 28);
+}
+
+function modemHandshakeSound() {
+  if (!soundEnabled) return;
+  const tones = [1070, 1270, 2025, 2225, 1650, 1850, 1200];
+  tones.forEach((f, idx) => {
+    setTimeout(() => beep(f, 0.09, 'sine', 0.03), idx * 95);
+  });
+}
+
+function toggleAudio() {
+  soundEnabled = !soundEnabled;
+  document.getElementById('btn-sound').textContent = soundEnabled ? '🔊 SES' : '🔇 SESSİZ';
+  if (soundEnabled) beep(720, 0.07);
+}
+
+function showToast(txt) {
+  const el = document.getElementById('status-toast');
+  el.textContent = txt;
+  setTimeout(() => {
+    if (el.textContent === txt) el.textContent = 'BERAY-OS HAZIR';
+  }, 3200);
+}
+
+/* ===================== 2. ÖZEL MODAL DİYALOG ===================== */
+function openModal({ title, msg, hasInput = false, defaultValue = '', showCancel = true, onOk }) {
+  const overlay = document.getElementById('modal-overlay');
+  const tEl = document.getElementById('modal-title');
+  const mEl = document.getElementById('modal-msg');
+  const iEl = document.getElementById('modal-input');
+  const okBtn = document.getElementById('modal-ok');
+  const cancelBtn = document.getElementById('modal-cancel');
+
+  tEl.textContent = title;
+  mEl.textContent = msg;
+  cancelBtn.style.display = showCancel ? 'inline-block' : 'none';
+
+  if (hasInput) {
+    iEl.classList.remove('hidden');
+    iEl.value = defaultValue;
+  } else {
+    iEl.classList.add('hidden');
+  }
+
+  overlay.classList.remove('hidden');
+  if (hasInput) {
+    iEl.focus();
+    iEl.select();
+  }
+
+  const cleanup = () => {
+    overlay.classList.add('hidden');
+    okBtn.onclick = null;
+    cancelBtn.onclick = null;
+    iEl.onkeydown = null;
+  };
+
+  cancelBtn.onclick = () => { beep(280, 0.04); cleanup(); };
+  okBtn.onclick = () => {
+    beep(640, 0.05);
+    const val = iEl.value;
+    cleanup();
+    if (onOk) onOk(val);
+  };
+  iEl.onkeydown = (e) => {
+    if (e.key === 'Enter') okBtn.click();
+    if (e.key === 'Escape') cancelBtn.click();
+  };
+}
+
+function showAboutModal() {
+  closeDropdowns();
+  openModal({
+    title: 'BERAY-OS 1975 v3.0 HAKKINDA',
+    msg: 'BERAY COMPUTER CORP. (1975)\nMimari: MOS 6502 8-Bit Mikroişlemci\nÇekirdek: BERAY-DOS Kernel Rev 3.0\n\nTarihin en saf masaüstü deneyimi için tasarlanmış; tam kapsamlı dosya sistemi, BASIC yorumlayıcısı, 6502 Assembly hata ayıklayıcısı, piksel stüdyosu ve BBS ağı içeren retro iş istasyonu.',
+    showCancel: false
+  });
+}
+
+/* ===================== 3. KALICI ÇİFT DİSKETLİ DOSYA SİSTEMİ ===================== */
+const FS_KEY = 'BERAY_OS_1975_FS';
+
+const DEFAULT_FS = {
+  'A:': {
+    'BENIOKU.TXT': {
+      type: 'file',
+      content: 'BERAY-OS 1975 v3.0 İŞLETİM SİSTEMİNE HOŞ GELDİNİZ!\n==================================================\nBERAY Computer Corp. tarafından 1975 prototip donanımları için geliştirilmiştir.\n\nNELER YAPABİLİRSİNİZ?\n1. Disket Sürücü (BERAY-FS): Disk A:\\ ve Disk B:\\ üzerinde klasörler ve belgeler oluşturun.\n2. BERAY-Write: Metin, BASIC (.BAS) veya Assembly (.ASM) kodları yazıp çalıştırın.\n3. BERAY-Terminal: Klasik DOS komutlarını ve etkileşimli BERAY-BASIC dilini kullanın.\n4. BERAY-Paint: 32x32 piksel çizimler yapıp .ART veya .PNG olarak kaydedin.\n5. BERAY-Debug: Gerçek MOS 6502 makine komutlarını (LDA, STA, INX...) adım adım izleyin.\n6. Hunt the Wumpus: 1975 efsanevi mağara avı oyununu oynayın.\n7. BERAY-Net: 1975 BBS / ARPANET ağ sunucularına bağlanıp mesaj gönderin.\n8. Sistem & GitHub: Tek tıkla index.html indirip GitHub Pages üzerinde yayınlayın!'
+    },
+    'MERHABA.BAS': {
+      type: 'file',
+      content: '10 PRINT "=== BERAY-BASIC 1975 YORUMLAYICI ==="\n20 PRINT "BERAY COMPUTER CORP. DONANIM TESTI"\n30 LET YIL = 1975\n40 PRINT "SISTEM YILI: " + YIL\n50 FOR I = 1 TO 5\n60 PRINT "6502 REGISTER KONTROL #" + I + " -> TAMAM"\n70 NEXT I\n80 PRINT "TUM TESTLER BASARIYLA TAMAMLANDI!"'
+    },
+    'DEMO.ASM': {
+      type: 'file',
+      content: '; BERAY-DEBUG 6502 ASSEMBLY ORNEGI\nLDA #$10\nSTA $0200\nLDX #$05\nINX\nSTX $0201\nADC #$25\nSTA $0202\nBRK'
+    },
+    'PROJELER': {
+      type: 'folder',
+      items: {
+        'ARSIV_NOTU.TXT': {
+          type: 'file',
+          content: 'BERAY Ar-Ge Laboratuvarı - 1975\n64KB RAM genişletme kartı ve çift disket denetleyicisi başarıyla doğrulandı.'
+        }
+      }
+    }
+  },
+  'B:': {
+    'BERAY_LOGO.ART': {
+      type: 'file',
+      content: JSON.stringify({
+        w: 32, h: 32,
+        pixels: Array.from({ length: 1024 }, (_, i) => {
+          const x = i % 32, y = Math.floor(i / 32);
+          // B harfi piksel sanatı
+          if (x >= 8 && x <= 11 && y >= 5 && y <= 26) return 1;
+          if (y >= 5 && y <= 7 && x >= 8 && x <= 21) return 1;
+          if (y >= 14 && y <= 16 && x >= 8 && x <= 21) return 1;
+          if (y >= 24 && y <= 26 && x >= 8 && x <= 21) return 1;
+          if (x >= 21 && x <= 23 && ((y >= 7 && y <= 14) || (y >= 16 && y <= 24))) return 1;
+          return 0;
+        })
+      })
+    },
+    'SKORLAR.TXT': {
+      type: 'file',
+      content: 'BERAY-OS 1975 OYUN KAYITLARI\n----------------------------\nHUNT THE WUMPUS AVCI DEFTERİ:'
+    }
+  }
+};
+
+function loadFS() {
+  try {
+    const raw = localStorage.getItem(FS_KEY);
+    if (!raw) {
+      localStorage.setItem(FS_KEY, JSON.stringify(DEFAULT_FS));
+      return JSON.parse(JSON.stringify(DEFAULT_FS));
+    }
+    return JSON.parse(raw);
+  } catch (e) {
+    return JSON.parse(JSON.stringify(DEFAULT_FS));
+  }
+}
+
+function saveFS(fs) {
+  try {
+    localStorage.setItem(FS_KEY, JSON.stringify(fs));
+    diskSound();
+    if (winMap['files']) renderFilesWindow(winMap['files'].el);
+  } catch (e) {}
+}
+
+function resolveDir(fs, drive, folder) {
+  if (!folder) return fs[drive];
+  if (fs[drive][folder] && fs[drive][folder].type === 'folder') {
+    return fs[drive][folder].items;
+  }
+  return fs[drive];
+}
+
+function promptCreateFile(drive = 'A:', folder = '') {
+  closeDropdowns();
+  openModal({
+    title: 'YENİ DOSYA OLUŞTUR',
+    msg: `${drive}\\${folder ? folder + '\\' : ''} içine oluşturulacak dosya adını girin (.TXT, .BAS, .ASM):`,
+    hasInput: true,
+    defaultValue: 'YENI_BELGE.TXT',
+    onOk: (name) => {
+      const clean = name.trim().toUpperCase();
+      if (!clean) return;
+      const fs = loadFS();
+      const dir = resolveDir(fs, drive, folder);
+      if (!dir[clean]) {
+        dir[clean] = { type: 'file', content: '' };
+        saveFS(fs);
+      }
+      launchApp('writer', { drive, folder, filename: clean });
+    }
+  });
+}
+
+function exportFullDiskBackup() {
+  closeDropdowns();
+  const fs = loadFS();
+  let dump = '=== BERAY-OS 1975 TAM DİSKET YEDEĞİ ===\n\n';
+  ['A:', 'B:'].forEach(drv => {
+    dump += `*** SÜRÜCÜ ${drv}\\ ***\n`;
+    Object.entries(fs[drv]).forEach(([name, node]) => {
+      if (node.type === 'file') {
+        dump += `\n--- [${drv}\\${name}] ---\n${node.content}\n`;
+      } else if (node.type === 'folder') {
+        Object.entries(node.items).forEach(([sub, subNode]) => {
+          dump += `\n--- [${drv}\\${name}\\${sub}] ---\n${subNode.content}\n`;
+        });
+      }
+    });
+  });
+  const blob = new Blob([dump], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'BERAY_OS_1975_DISKET_YEDEGI.txt';
+  a.click();
+  showToast('TÜM DİSKET YEDEĞİ İNDİRİLDİ');
+}
+
+/* ===================== 4. BIOS / POST AÇILIŞ SEKANSı ===================== */
+const BOOT_STEPS = [
+  'BERAY-BIOS ROM v3.0 KONTROL EDİLİYOR ................ [TAMAM]',
+  'MOS 6502 MİKROİŞLEMCİ VE KESME VEKTÖRLERİ .......... [1.023 MHz OK]',
+  '65536 BAYT SİSTEM BELLEĞİ DOĞRULANIYOR ............. [64KB OK]',
+  'DİSKET DENETLEYİCİSİ: A:\\ VE B:\\ BAĞLANDI ........... [HAZIR]',
+  'BERAY-DOS ÇEKİRDEK VE GRAFİK MASAÜSTÜ .............. [BAŞLATILIYOR]'
+];
+let bootTimer = null;
+let isBootDone = false;
+
+function startBootSequence() {
+  const logsEl = document.getElementById('boot-logs');
+  const ramEl = document.getElementById('boot-ram');
+  const barEl = document.getElementById('boot-bar');
+  const pctEl = document.getElementById('boot-pct');
+
+  logsEl.innerHTML = '';
+  isBootDone = false;
+  let i = 0;
+
+  bootTimer = setInterval(() => {
+    if (i < BOOT_STEPS.length) {
+      const div = document.createElement('div');
+      div.textContent = '> ' + BOOT_STEPS[i];
+      logsEl.appendChild(div);
+      beep(420 + i * 75, 0.045);
+      diskSound();
+      i++;
+      const pct = Math.round((i / BOOT_STEPS.length) * 100);
+      ramEl.textContent = String(Math.round((i / BOOT_STEPS.length) * 65536)).padStart(5, '0');
+      barEl.style.width = pct + '%';
+      pctEl.textContent = pct + '%';
+    } else {
+      clearInterval(bootTimer);
+      setTimeout(skipBoot, 350);
+    }
+  }, 280);
+}
+
+function skipBoot() {
+  if (isBootDone) return;
+  isBootDone = true;
+  if (bootTimer) clearInterval(bootTimer);
+  document.getElementById('boot-screen').classList.add('hidden');
+  beep(880, 0.11);
+  launchApp('writer', { drive: 'A:', folder: '', filename: 'BENIOKU.TXT' });
+}
+
+function triggerReboot() {
+  closeDropdowns();
+  document.getElementById('win-layer').innerHTML = '';
+  winMap = {};
+  updateDock();
+  const root = document.getElementById('crt-root');
+  root.classList.remove('crt-warmup');
+  void root.offsetWidth;
+  root.classList.add('crt-warmup');
+  document.getElementById('boot-screen').classList.remove('hidden');
+  startBootSequence();
+}
+
+/* ===================== 5. TEMA, MENÜ VE SİSTEM SAATİ ===================== */
+function setTheme(theme) {
+  closeDropdowns();
+  document.body.classList.remove('theme-amber', 'theme-paper');
+  if (theme === 'amber') document.body.classList.add('theme-amber');
+  if (theme === 'paper') document.body.classList.add('theme-paper');
+  beep(640, 0.05);
+  showToast('MONİTÖR TEMASI DEĞİŞTİRİLDİ');
+}
+
+function toggleScanlines() {
+  closeDropdowns();
+  document.body.classList.toggle('no-scanlines');
+  beep(520, 0.04);
+}
+
+function toggleDropdown(id, e) {
+  e.stopPropagation();
+  beep(500, 0.03);
+  const target = document.getElementById(id);
+  const wasHidden = target.classList.contains('hidden');
+  closeDropdowns();
+  if (wasHidden) target.classList.remove('hidden');
+}
+
+function closeDropdowns() {
+  document.querySelectorAll('.top-dropdown').forEach(el => el.classList.add('hidden'));
+}
+
+function selectIcon(el) {
+  document.querySelectorAll('.desk-icon').forEach(i => i.classList.remove('selected'));
+  el.classList.add('selected');
+  beep(460, 0.02);
+}
+
+setInterval(() => {
+  const d = new Date();
+  document.getElementById('sys-clock').textContent = d.toTimeString().split(' ')[0];
+  const openCnt = Object.keys(winMap).length;
+  const cpu = Math.min(96, 8 + openCnt * 9 + Math.floor(Math.random() * 6));
+  const ram = Math.min(62, 16 + openCnt * 4);
+  document.getElementById('sys-stats').textContent = `CPU:%${cpu} RAM:${ram}KB`;
+}, 1000);
+
+/* ===================== 6. PENCERE YÖNETİCİSİ ===================== */
+let zTop = 100;
+let winMap = {};
+let cascadeStep = 0;
+
+function focusWin(id) {
+  Object.values(winMap).forEach(w => w.el.classList.remove('active'));
+  if (winMap[id]) {
+    winMap[id].el.classList.remove('hidden');
+    winMap[id].minimized = false;
+    zTop++;
+    winMap[id].el.style.zIndex = zTop;
+    winMap[id].el.classList.add('active');
+  }
+  updateDock();
+}
+
+function minimizeWin(id) {
+  beep(360, 0.04);
+  if (winMap[id]) {
+    winMap[id].el.classList.add('hidden');
+    winMap[id].el.classList.remove('active');
+    winMap[id].minimized = true;
+    updateDock();
+  }
+}
+
+function maximizeWin(id) {
+  beep(580, 0.04);
+  if (winMap[id]) {
+    winMap[id].el.classList.toggle('maximized');
+    focusWin(id);
+  }
+}
+
+function closeWin(id) {
+  beep(300, 0.05);
+  if (winMap[id]) {
+    if (winMap[id].onClose) winMap[id].onClose();
+    winMap[id].el.remove();
+    delete winMap[id];
+    updateDock();
+  }
+}
+
+function updateDock() {
+  const dock = document.getElementById('dock-tasks');
+  dock.innerHTML = '';
+  Object.keys(winMap).forEach(id => {
+    const w = winMap[id];
+    const btn = document.createElement('button');
+    const isActive = !w.minimized && w.el.classList.contains('active');
+    btn.className = 'retro-btn ' + (isActive ? 'active-tool' : '');
+    btn.style.padding = '2px 8px';
+    btn.style.fontSize = '16px';
+    btn.style.flexShrink = '0';
+    btn.textContent = w.dockLabel;
+    btn.onclick = () => {
+      if (isActive) minimizeWin(id);
+      else focusWin(id);
+    };
+    dock.appendChild(btn);
+  });
+}
+
+function attachDragResize(winEl, headerEl, resizerEl, id) {
+  let dragging = false, resizing = false;
+  let sx, sy, sl, st, sw, sh;
+
+  const beginDrag = (x, y) => {
+    if (winEl.classList.contains('maximized')) return;
+    dragging = true;
+    focusWin(id);
+    sx = x; sy = y;
+    sl = winEl.offsetLeft; st = winEl.offsetTop;
+  };
+
+  const beginResize = (x, y) => {
+    if (winEl.classList.contains('maximized')) return;
+    resizing = true;
+    focusWin(id);
+    sx = x; sy = y;
+    sw = winEl.offsetWidth; sh = winEl.offsetHeight;
+  };
+
+  const moveHandler = (x, y) => {
+    if (dragging) {
+      const nx = Math.min(window.innerWidth - 90, Math.max(0, sl + (x - sx)));
+      const ny = Math.min(window.innerHeight - 90, Math.max(0, st + (y - sy)));
+      winEl.style.left = nx + 'px';
+      winEl.style.top = ny + 'px';
+    } else if (resizing) {
+      const nw = Math.max(300, Math.min(window.innerWidth - sl - 10, sw + (x - sx)));
+      const nh = Math.max(220, Math.min(window.innerHeight - st - 50, sh + (y - sy)));
+      winEl.style.width = nw + 'px';
+      winEl.style.height = nh + 'px';
+    }
+  };
+
+  const endHandler = () => { dragging = false; resizing = false; };
+
+  headerEl.addEventListener('mousedown', e => { if (e.target.tagName !== 'BUTTON') beginDrag(e.clientX, e.clientY); });
+  resizerEl.addEventListener('mousedown', e => { e.stopPropagation(); beginResize(e.clientX, e.clientY); });
+  window.addEventListener('mousemove', e => moveHandler(e.clientX, e.clientY));
+  window.addEventListener('mouseup', endHandler);
+
+  headerEl.addEventListener('touchstart', e => {
+    if (e.target.tagName !== 'BUTTON') beginDrag(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+  resizerEl.addEventListener('touchstart', e => {
+    e.stopPropagation();
+    beginResize(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+  window.addEventListener('touchmove', e => {
+    if (dragging || resizing) moveHandler(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+  window.addEventListener('touchend', endHandler);
+}
+
+function createWindow({ id, title, dockLabel, width = 580, height = 430, html, onInit, onClose }) {
+  if (winMap[id]) {
+    focusWin(id);
+    if (onInit) onInit(winMap[id].el);
+    return winMap[id].el;
+  }
+
+  beep(620, 0.05);
+  const mobile = window.innerWidth < 640;
+  const w = mobile ? window.innerWidth - 16 : Math.min(window.innerWidth - 40, width);
+  const h = mobile ? window.innerHeight - 100 : Math.min(window.innerHeight - 105, height);
+  const offset = (cascadeStep++ % 6) * 22;
+  const left = mobile ? 8 : Math.min(window.innerWidth - w - 20, 125 + offset);
+  const top = mobile ? 8 : Math.min(window.innerHeight - h - 55, 14 + offset);
+
+  const win = document.createElement('div');
+  win.className = 'os-win active';
+  win.style.width = w + 'px';
+  win.style.height = h + 'px';
+  win.style.left = left + 'px';
+  win.style.top = top + 'px';
+  win.onmousedown = () => focusWin(id);
+
+  win.innerHTML = `
+    <div class="win-header">
+      <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding-right:8px;">${title}</span>
+      <div class="win-ctrls">
+        <button class="win-ctrl-btn" title="Küçült" onclick="minimizeWin('${id}')">_</button>
+        <button class="win-ctrl-btn" title="Tam Ekran" onclick="maximizeWin('${id}')">□</button>
+        <button class="win-ctrl-btn close-btn" title="Kapat" onclick="closeWin('${id}')">X</button>
+      </div>
+    </div>
+    <div class="win-body">${html}</div>
+    <div class="win-resizer" title="Boyutlandır"></div>
+  `;
+
+  document.getElementById('win-layer').appendChild(win);
+  attachDragResize(win, win.querySelector('.win-header'), win.querySelector('.win-resizer'), id);
+
+  winMap[id] = { el: win, dockLabel, minimized: false, onClose };
+  focusWin(id);
+  if (onInit) onInit(win);
+  return win;
+}
+
+function launchApp(app, opts = {}) {
+  closeDropdowns();
+  if (app === 'files') openFilesApp();
+  else if (app === 'writer') openWriteApp(opts);
+  else if (app === 'terminal') openTerminalApp(opts);
+  else if (app === 'paint') openPaintApp(opts);
+  else if (app === 'debug') openDebugApp(opts);
+  else if (app === 'hunt') openHuntApp();
+  else if (app === 'net') openNetApp();
+  else if (app === 'settings') openSettingsApp();
+}
+
+/* ===================== 7. BERAY-FS (ÇİFT DİSKETLİ DOSYA YÖNETİCİSİ) ===================== */
+let curDrive = 'A:';
+let curFolder = '';
+
+function openFilesApp() {
+  createWindow({
+    id: 'files',
+    title: 'BERAY-FS // DİSKET SÜRÜCÜ YÖNETİCİSİ (A:\\ & B:\\)',
+    dockLabel: '▤ Disket',
+    width: 630,
+    height: 440,
+    html: `
+      <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; padding-bottom:8px; margin-bottom:8px; border-bottom:1px solid var(--dim);">
+        <div style="display:flex; gap:6px; align-items:center;">
+          <button id="fs-a" class="retro-btn" style="font-weight:bold;">Disk A:\\</button>
+          <button id="fs-b" class="retro-btn" style="font-weight:bold;">Disk B:\\</button>
+          <button id="fs-up" class="retro-btn" style="display:none;">⬆ Üst Klasör</button>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button id="fs-mkdir" class="retro-btn">+ Klasör</button>
+          <button id="fs-mkfile" class="retro-btn" style="font-weight:bold;">+ Yeni Belge</button>
+        </div>
+      </div>
+      <div id="fs-path" style="font-weight:bold; margin-bottom:6px;">KONUM: A:\\</div>
+      <div id="fs-list" style="flex:1; overflow-y:auto; background:var(--bg); border:1px solid var(--dim); border-radius:3px;"></div>
+      <div id="fs-status" style="padding-top:6px; display:flex; justify-content:space-between; font-size:17px; opacity:0.85;"></div>
+    `,
+    onInit: (win) => {
+      win.querySelector('#fs-a').onclick = () => { curDrive = 'A:'; curFolder = ''; diskSound(); renderFilesWindow(win); };
+      win.querySelector('#fs-b').onclick = () => { curDrive = 'B:'; curFolder = ''; diskSound(); renderFilesWindow(win); };
+      win.querySelector('#fs-up').onclick = () => { curFolder = ''; diskSound(); renderFilesWindow(win); };
+      win.querySelector('#fs-mkdir').onclick = () => {
+        if (curFolder) { showToast('ALT KLASÖR İÇİNE KLASÖR AÇILAMAZ'); return; }
+        openModal({
+          title: 'YENİ KLASÖR OLUŞTUR',
+          msg: `${curDrive}\\ altında oluşturulacak klasör adı:`,
+          hasInput: true,
+          defaultValue: 'YENI_KLASOR',
+          onOk: (name) => {
+            const clean = name.trim().toUpperCase().replace(/[^A-Z0-9_]/g, '');
+            if (!clean) return;
+            const fs = loadFS();
+            if (!fs[curDrive][clean]) {
+              fs[curDrive][clean] = { type: 'folder', items: {} };
+              saveFS(fs);
+              showToast(`KLASÖR OLUŞTURULDU: ${clean}`);
+            }
+          }
+        });
+      };
+      win.querySelector('#fs-mkfile').onclick = () => promptCreateFile(curDrive, curFolder);
+      renderFilesWindow(win);
+    }
+  });
+}
+
+function renderFilesWindow(win) {
+  const fs = loadFS();
+  const dir = resolveDir(fs, curDrive, curFolder);
+  const listEl = win.querySelector('#fs-list');
+  const pathEl = win.querySelector('#fs-path');
+  const upBtn = win.querySelector('#fs-up');
+  const statEl = win.querySelector('#fs-status');
+
+  win.querySelector('#fs-a').classList.toggle('active-tool', curDrive === 'A:');
+  win.querySelector('#fs-b').classList.toggle('active-tool', curDrive === 'B:');
+  upBtn.style.display = curFolder ? 'inline-block' : 'none';
+  pathEl.textContent = `KONUM: ${curDrive}\\${curFolder ? curFolder + '\\' : ''}`;
+
+  listEl.innerHTML = '';
+  const entries = Object.entries(dir);
+  let bytes = 0;
+
+  if (entries.length === 0) {
+    listEl.innerHTML = '<div style="padding:24px; text-align:center; opacity:0.75;">Bu dizin boş. "+ Yeni Belge" ile dosya oluşturabilirsiniz.</div>';
+  } else {
+    entries.forEach(([name, node]) => {
+      const isDir = node.type === 'folder';
+      const sizeStr = isDir ? Object.keys(node.items).length + ' Öğe' : node.content.length + ' Bayt';
+      if (!isDir) bytes += node.content.length;
+
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:7px 10px; border-bottom:1px solid var(--dim);';
+      const iconChar = isDir ? '📁' : (name.endsWith('.ART') ? '🎨' : name.endsWith('.BAS') ? '⚡' : name.endsWith('.ASM') ? '⚙' : '📄');
+
+      row.innerHTML = `
+        <div class="row-open" style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1; min-width:0;">
+          <span>${iconChar}</span>
+          <span style="font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${name}</span>
+          <span style="font-size:16px; opacity:0.75; flex-shrink:0;">(${sizeStr})</span>
+        </div>
+        <div style="display:flex; gap:5px; flex-shrink:0; margin-left:8px;">
+          <button class="retro-btn btn-o" style="padding:1px 7px; font-size:16px;">Aç</button>
+          <button class="retro-btn btn-r" style="padding:1px 7px; font-size:16px;">Adlandır</button>
+          <button class="retro-btn btn-d" style="padding:1px 7px; font-size:16px;">Sil</button>
+        </div>
+      `;
+
+      const openFileAction = () => {
+        diskSound();
+        if (isDir) {
+          curFolder = name;
+          renderFilesWindow(win);
+        } else if (name.endsWith('.ART')) {
+          launchApp('paint', { drive: curDrive, folder: curFolder, filename: name });
+        } else if (name.endsWith('.ASM')) {
+          launchApp('debug', { drive: curDrive, folder: curFolder, filename: name });
+        } else {
+          launchApp('writer', { drive: curDrive, folder: curFolder, filename: name });
+        }
+      };
+
+      row.querySelector('.row-open').onclick = openFileAction;
+      row.querySelector('.btn-o').onclick = openFileAction;
+
+      row.querySelector('.btn-r').onclick = () => {
+        openModal({
+          title: 'YENİDEN ADLANDIR',
+          msg: `'${name}' için yeni dosya/klasör adı:`,
+          hasInput: true,
+          defaultValue: name,
+          onOk: (newName) => {
+            const clean = newName.trim().toUpperCase();
+            if (!clean || clean === name) return;
+            const fresh = loadFS();
+            const d = resolveDir(fresh, curDrive, curFolder);
+            d[clean] = d[name];
+            delete d[name];
+            saveFS(fresh);
+            showToast(`AD DEĞİŞTİRİLDİ: ${clean}`);
+          }
+        });
+      };
+
+      row.querySelector('.btn-d').onclick = () => {
+        openModal({
+          title: 'ÖĞEYİ SİL',
+          msg: `'${name}' kalıcı olarak silinsin mi?`,
+          onOk: () => {
+            const fresh = loadFS();
+            const d = resolveDir(fresh, curDrive, curFolder);
+            delete d[name];
+            saveFS(fresh);
+            showToast(`SİLİNDİ: ${name}`);
+          }
+        });
+      };
+
+      listEl.appendChild(row);
+    });
+  }
+
+  statEl.innerHTML = `<span>${entries.length} Öğe</span><span>Kullanılan Alan: ${bytes} Bayt</span>`;
+}
+
+/* ===================== 8. BERAY-WRITE (SATIR NUMARALI METİN & KOD EDİTÖRÜ) ===================== */
+let writeState = { drive: 'A:', folder: '', filename: 'BENIOKU.TXT' };
+
+function openWriteApp(opts = {}) {
+  if (opts.filename) {
+    writeState = { drive: opts.drive || 'A:', folder: opts.folder || '', filename: opts.filename };
+  }
+
+  createWindow({
+    id: 'writer',
+    title: 'BERAY-WRITE // SATIR NUMARALI METİN & BASIC EDİTÖRÜ',
+    dockLabel: '✎ Write',
+    width: 650,
+    height: 470,
+    html: `
+      <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:6px; padding-bottom:8px; margin-bottom:8px; border-bottom:1px solid var(--dim);">
+        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+          <button id="bw-new" class="retro-btn">Yeni</button>
+          <button id="bw-save" class="retro-btn" style="font-weight:bold;">Kaydet (Ctrl+S)</button>
+          <button id="bw-saveas" class="retro-btn">Farklı Kaydet</button>
+          <button id="bw-run" class="retro-btn" style="font-weight:bold;">▶ BERAY-BASIC Çalıştır</button>
+          <button id="bw-dl" class="retro-btn">⬇ İndir</button>
+        </div>
+        <span id="bw-file" style="font-weight:bold;">${writeState.drive}\\${writeState.filename}</span>
+      </div>
+      <div style="flex:1; display:flex; border:1px solid var(--dim); background:var(--bg); overflow:hidden;">
+        <pre id="bw-gutter" style="width:42px; margin:0; padding:8px 6px; text-align:right; opacity:0.6; border-right:1px solid var(--dim); overflow:hidden; font-size:19px; line-height:1.3;">1</pre>
+        <textarea id="bw-area" style="flex:1; background:transparent; color:var(--fg); border:none; padding:8px; font-size:19px; line-height:1.3; outline:none; resize:none; overflow-y:auto;" spellcheck="false" placeholder="Metin veya BASIC kodu yazın..."></textarea>
+      </div>
+      <div style="display:flex; justify-content:space-between; padding-top:6px; font-size:17px; opacity:0.85;">
+        <span id="bw-stats">Satır: 1 | Karakter: 0</span>
+        <span>BERAY-ASCII / BASIC KODLAMA</span>
+      </div>
+    `,
+    onInit: (win) => {
+      const area = win.querySelector('#bw-area');
+      const gutter = win.querySelector('#bw-gutter');
+      const fileLabel = win.querySelector('#bw-file');
+      const statsLabel = win.querySelector('#bw-stats');
+
+      const refreshGutter = () => {
+        const lines = area.value ? area.value.split('\n').length : 1;
+        gutter.textContent = Array.from({ length: lines }, (_, i) => i + 1).join('\n');
+        statsLabel.textContent = `Satır: ${lines} | Karakter: ${area.value.length}`;
+      };
+
+      const loadContent = () => {
+        const fs = loadFS();
+        const dir = resolveDir(fs, writeState.drive, writeState.folder);
+        const node = dir[writeState.filename];
+        fileLabel.textContent = `${writeState.drive}\\${writeState.folder ? writeState.folder + '\\' : ''}${writeState.filename}`;
+        area.value = (node && node.type === 'file') ? node.content : '';
+        refreshGutter();
+      };
+
+      loadContent();
+
+      const performSave = (targetName) => {
+        const fs = loadFS();
+        const dir = resolveDir(fs, writeState.drive, writeState.folder);
+        dir[targetName] = { type: 'file', content: area.value };
+        saveFS(fs);
+        writeState.filename = targetName;
+        fileLabel.textContent = `${writeState.drive}\\${writeState.folder ? writeState.folder + '\\' : ''}${targetName}`;
+        showToast(`KAYDEDİLDİ: ${targetName}`);
+      };
+
+      area.oninput = () => {
+        beep(720, 0.012, 'sine', 0.015);
+        refreshGutter();
+      };
+      area.onscroll = () => { gutter.scrollTop = area.scrollTop; };
+      area.onkeydown = (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+          e.preventDefault();
+          performSave(writeState.filename);
+        }
+      };
+
+      win.querySelector('#bw-new').onclick = () => promptCreateFile(writeState.drive, writeState.folder);
+      win.querySelector('#bw-save').onclick = () => performSave(writeState.filename);
+      win.querySelector('#bw-saveas').onclick = () => {
+        openModal({
+          title: 'FARKLI KAYDET',
+          msg: `Yeni dosya adını girin (${writeState.drive}\\):`,
+          hasInput: true,
+          defaultValue: writeState.filename,
+          onOk: (n) => {
+            const clean = n.trim().toUpperCase();
+            if (clean) performSave(clean);
+          }
+        });
+      };
+      win.querySelector('#bw-run').onclick = () => {
+        launchApp('terminal', { runBasicCode: area.value, fileName: writeState.filename });
+      };
+      win.querySelector('#bw-dl').onclick = () => {
+        const blob = new Blob([area.value], { type: 'text/plain;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = writeState.filename;
+        a.click();
+        showToast(`İNDİRİLDİ: ${writeState.filename}`);
+      };
+    }
+  });
+}
+
+/* ===================== 9. BERAY-TERMINAL & BERAY-BASIC YORUMLAYICI ===================== */
+const SHARED_6502_RAM = new Uint8Array(65536);
+
+function runBerayBasicProgram(source, printLine) {
+  const lines = source.split('\n').map(l => l.trim()).filter(Boolean);
+  const prog = lines.map(l => {
+    const m = l.match(/^(\d+)\s+(.*)$/);
+    return m ? { num: parseInt(m[1], 10), code: m[2].trim() } : { num: 0, code: l };
+  }).sort((a, b) => a.num - b.num);
+
+  const vars = {};
+  const evalExpr = (expr) => {
+    const parts = expr.split('+').map(p => p.trim());
+    const vals = parts.map(tok => {
+      if ((tok.startsWith('"') && tok.endsWith('"')) || (tok.startsWith("'") && tok.endsWith("'"))) {
+        return tok.slice(1, -1);
+      }
+      if (tok.toUpperCase().startsWith('PEEK(') && tok.endsWith(')')) {
+        const addr = parseInt(tok.slice(5, -1), 16) || 0;
+        return SHARED_6502_RAM[addr & 0xFFFF];
+      }
+      const sub = tok.replace(/[A-Z][A-Z0-9]*/gi, v => (vars[v.toUpperCase()] !== undefined ? vars[v.toUpperCase()] : 0));
+      if (/^[0-9+\-*/().\s]+$/.test(sub)) {
+        try { return Function('"use strict";return (' + sub + ')')(); } catch (e) { return 0; }
+      }
+      return sub;
+    });
+    if (vals.some(v => typeof v === 'string')) return vals.join('');
+    return vals.reduce((a, b) => a + Number(b), 0);
+  };
+
+  let pc = 0;
+  const forStack = [];
+  let guard = 0;
+
+  while (pc < prog.length && guard++ < 1500) {
+    const stmt = prog[pc].code;
+    const up = stmt.toUpperCase();
+
+    if (up.startsWith('REM') || up.startsWith("'")) {
+      pc++;
+    } else if (up.startsWith('PRINT ')) {
+      printLine(String(evalExpr(stmt.slice(6))));
+      pc++;
+    } else if (up.startsWith('POKE ')) {
+      const args = stmt.slice(5).split(',');
+      if (args.length === 2) {
+        const addr = parseInt(args[0].trim(), 16) & 0xFFFF;
+        const val = Number(evalExpr(args[1])) & 0xFF;
+        SHARED_6502_RAM[addr] = val;
+      }
+      pc++;
+    } else if (up.startsWith('IF ')) {
+      const m = stmt.match(/^IF\s+(.+?)\s+THEN\s+(.+)$/i);
+      if (m) {
+        const condParts = m[1].split(/(=|<|>)/);
+        let condOk = false;
+        if (condParts.length === 3) {
+          const left = evalExpr(condParts[0]);
+          const op = condParts[1];
+          const right = evalExpr(condParts[2]);
+          if (op === '=') condOk = (left == right);
+          if (op === '<') condOk = (left < right);
+          if (op === '>') condOk = (left > right);
+        }
+        if (condOk) {
+          const thenPart = m[2].trim();
+          if (/^\d+$/.test(thenPart)) {
+            const idx = prog.findIndex(p => p.num === parseInt(thenPart, 10));
+            if (idx !== -1) { pc = idx; continue; }
+          } else if (thenPart.toUpperCase().startsWith('PRINT ')) {
+            printLine(String(evalExpr(thenPart.slice(6))));
+          }
+        }
+      }
+      pc++;
+    } else if (up.startsWith('LET ') || /^[A-Z][A-Z0-9]*\s*=/.test(up)) {
+      const body = up.startsWith('LET ') ? stmt.slice(4) : stmt;
+      const eq = body.indexOf('=');
+      if (eq > 0) {
+        const vName = body.slice(0, eq).trim().toUpperCase();
+        vars[vName] = evalExpr(body.slice(eq + 1));
+      }
+      pc++;
+    } else if (up.startsWith('FOR ')) {
+      const m = stmt.match(/^FOR\s+([A-Z0-9]+)\s*=\s*(.+?)\s+TO\s+(.+)$/i);
+      if (m) {
+        const vName = m[1].toUpperCase();
+        vars[vName] = Number(evalExpr(m[2]));
+        forStack.push({ vName, limit: Number(evalExpr(m[3])), pc });
+      }
+      pc++;
+    } else if (up.startsWith('NEXT')) {
+      const top = forStack[forStack.length - 1];
+      if (top) {
+        vars[top.vName] = (vars[top.vName] || 0) + 1;
+        if (vars[top.vName] <= top.limit) {
+          pc = top.pc + 1;
+          continue;
+        }
+        forStack.pop();
+      }
+      pc++;
+    } else if (up.startsWith('GOTO ')) {
+      const target = parseInt(up.slice(5).trim(), 10);
+      const idx = prog.findIndex(p => p.num === target);
+      if (idx !== -1) { pc = idx; continue; }
+      pc++;
+    } else if (up === 'END' || up === 'STOP') {
+      break;
+    } else {
+      printLine(`?SYNTAX ERROR AT LINE ${prog[pc].num || pc + 1}`);
+      break;
+    }
+  }
+}
+
+function openTerminalApp(opts = {}) {
+  let basicInteractive = false;
+  let basicBuffer = {};
+  let termDrive = 'A:';
+  let termFolder = '';
+
+  createWindow({
+    id: 'terminal',
+    title: 'BERAY-TERMINAL & BERAY-BASIC YORUMLAYICI',
+    dockLabel: '>_ Terminal',
+    width: 630,
+    height: 450,
+    html: `
+      <div id="term-out" style="flex:1; overflow-y:auto; background:var(--bg); border:1px solid var(--dim); padding:10px; font-size:19px; line-height:1.3; user-select:text;">
+        <div style="font-weight:bold;" class="glow">BERAY-DOS KOMUT KABUĞU v3.0 (1975)</div>
+        <div style="opacity:0.85;">Komutlar için 'HELP', etkileşimli BASIC için 'BASIC' yazın.</div>
+      </div>
+      <div style="display:flex; align-items:center; margin-top:8px; background:var(--bg); border:1px solid var(--fg); padding:4px 8px;">
+        <span id="term-prompt" style="font-weight:bold; margin-right:6px;">A:\\&gt;</span>
+        <input id="term-in" type="text" style="flex:1; background:transparent; border:none; color:var(--fg); font-size:20px; outline:none; text-transform:uppercase;" autocomplete="off" />
+      </div>
+    `,
+    onInit: (win) => {
+      const outEl = win.querySelector('#term-out');
+      const inEl = win.querySelector('#term-in');
+      const promptEl = win.querySelector('#term-prompt');
+      inEl.focus();
+
+      const print = (txt, dim = false) => {
+        const d = document.createElement('div');
+        d.style.whiteSpace = 'pre-wrap';
+        if (dim) d.style.opacity = '0.75';
+        d.textContent = txt;
+        outEl.appendChild(d);
+        outEl.scrollTop = outEl.scrollHeight;
+      };
+
+      const updatePrompt = () => {
+        promptEl.textContent = basicInteractive ? 'BASIC>' : `${termDrive}\\${termFolder ? termFolder + '\\' : ''}>`;
+      };
+
+      if (opts.runBasicCode) {
+        print(`> BERAY-WRITE ÜZERİNDEN ÇALIŞTIRILIYOR: ${opts.fileName || 'PROGRAM.BAS'}`, true);
+        runBerayBasicProgram(opts.runBasicCode, print);
+        print('READY.', true);
+      }
+
+      inEl.onkeydown = (e) => {
+        if (e.key !== 'Enter') return;
+        const raw = inEl.value.trim();
+        inEl.value = '';
+        if (!raw) return;
+        const up = raw.toUpperCase();
+        beep(540, 0.04);
+        print(`${promptEl.textContent} ${up}`, true);
+
+        if (basicInteractive) {
+          if (up === 'EXIT' || up === 'BYE' || up === 'DOS') {
+            basicInteractive = false;
+            updatePrompt();
+            print('BERAY-DOS KABUĞUNA DÖNÜLDÜ.');
+          } else if (up === 'NEW') {
+            basicBuffer = {};
+            print('BELLEK TEMİZLENDİ.');
+          } else if (up === 'LIST') {
+            Object.keys(basicBuffer).map(Number).sort((a, b) => a - b).forEach(k => {
+              print(`${k} ${basicBuffer[k]}`);
+            });
+          } else if (up === 'RUN') {
+            const code = Object.keys(basicBuffer).map(Number).sort((a, b) => a - b).map(k => `${k} ${basicBuffer[k]}`).join('\n');
+            runBerayBasicProgram(code, print);
+            print('READY.', true);
+          } else if (/^\d+\s+/.test(raw)) {
+            const m = raw.match(/^(\d+)\s+(.*)$/);
+            basicBuffer[parseInt(m[1], 10)] = m[2];
+          } else {
+            runBerayBasicProgram(raw, print);
+          }
+          return;
+        }
+
+        // DOS Komutları
+        if (up === 'HELP' || up === '?') {
+          print('BERAY-DOS KOMUTLARI:\n  HELP             : Bu yardım listesini gösterir\n  DIR              : Geçerli dizindeki dosya ve klasörleri listeler\n  A: / B:          : Sürücü değiştirir\n  CD <KLASÖR>      : Klasöre girer (CD .. ile geri döner)\n  MKDIR <AD>       : Yeni klasör oluşturur\n  TYPE <DOSYA>     : Dosya içeriğini ekrana yazar\n  EDIT <DOSYA>     : Dosyayı BERAY-Write editöründe açar\n  DEL <DOSYA>      : Dosyayı siler\n  RUN <DOSYA.BAS>  : BASIC programını çalıştırır\n  BASIC            : Etkileşimli BERAY-BASIC yorumlayıcısını açar\n  VER              : İşletim sistemi sürüm bilgisini gösterir\n  GITHUB           : GitHub Pages yayınlama adımlarını gösterir\n  REBOOT           : Bilgisayarı yeniden başlatır\n  CLS              : Ekranı temizler');
+        } else if (up === 'CLS') {
+          outEl.innerHTML = '';
+        } else if (up === 'VER') {
+          print('BERAY-OS v3.0 (BERAY Computer Corp. 1975 Prototype)');
+        } else if (up === 'REBOOT') {
+          triggerReboot();
+        } else if (up === 'GITHUB') {
+          print('GITHUB PAGES YAYINLAMA:\n1. Masaüstündeki "Sistem & GitHub Yayın" simgesini açın.\n2. "index.html İndir" butonuna basıp dosyayı indirin.\n3. GitHub deponuza yükleyip Settings > Pages üzerinden yayınlayın.');
+        } else if (up === 'BASIC') {
+          basicInteractive = true;
+          updatePrompt();
+          print('BERAY-BASIC v1.0 AKTİF (Komutlar: 10 PRINT "...", LIST, RUN, NEW, EXIT)');
+        } else if (up === 'A:' || up === 'B:') {
+          termDrive = up;
+          termFolder = '';
+          updatePrompt();
+        } else if (up.startsWith('CD ')) {
+          const arg = up.slice(3).trim();
+          if (arg === '..' || arg === '\\') {
+            termFolder = '';
+          } else {
+            const fs = loadFS();
+            if (fs[termDrive][arg] && fs[termDrive][arg].type === 'folder') {
+              termFolder = arg;
+            } else {
+              print(`HATA: '${arg}' klasörü bulunamadı.`);
+            }
+          }
+          updatePrompt();
+        } else if (up.startsWith('MKDIR ')) {
+          const arg = up.slice(6).trim().replace(/[^A-Z0-9_]/g, '');
+          if (arg && !termFolder) {
+            const fs = loadFS();
+            fs[termDrive][arg] = { type: 'folder', items: {} };
+            saveFS(fs);
+            print(`KLASÖR OLUŞTURULDU: ${arg}`);
+          } else {
+            print('HATA: Geçersiz klasör adı.');
+          }
+        } else if (up === 'DIR') {
+          const fs = loadFS();
+          const dir = resolveDir(fs, termDrive, termFolder);
+          print(`DİZİN: ${termDrive}\\${termFolder}`);
+          Object.entries(dir).forEach(([k, v]) => {
+            print(`  ${k.padEnd(18)} ${v.type === 'folder' ? '<KLASÖR>' : v.content.length + ' BAYT'}`);
+          });
+        } else if (up.startsWith('TYPE ')) {
+          const fname = up.slice(5).trim();
+          const fs = loadFS();
+          const dir = resolveDir(fs, termDrive, termFolder);
+          if (dir[fname] && dir[fname].type === 'file') {
+            print(dir[fname].content);
+          } else {
+            print(`HATA: '${fname}' bulunamadı.`);
+          }
+        } else if (up.startsWith('EDIT ')) {
+          const fname = up.slice(5).trim() || 'YENI.TXT';
+          launchApp('writer', { drive: termDrive, folder: termFolder, filename: fname });
+        } else if (up.startsWith('DEL ')) {
+          const fname = up.slice(4).trim();
+          const fs = loadFS();
+          const dir = resolveDir(fs, termDrive, termFolder);
+          if (dir[fname]) {
+            delete dir[fname];
+            saveFS(fs);
+            print(`SİLİNDİ: ${fname}`);
+          } else {
+            print(`HATA: '${fname}' bulunamadı.`);
+          }
+        } else if (up.startsWith('RUN ')) {
+          const fname = up.slice(4).trim();
+          const fs = loadFS();
+          const dir = resolveDir(fs, termDrive, termFolder);
+          if (dir[fname] && dir[fname].type === 'file') {
+            runBerayBasicProgram(dir[fname].content, print);
+            print('READY.', true);
+          } else {
+            print(`HATA: '${fname}' bulunamadı.`);
+          }
+        } else if (up.startsWith('PRINT ')) {
+          runBerayBasicProgram(raw, print);
+        } else {
+          print(`BİLİNMEYEN KOMUT: '${up}' (Yardım için 'HELP' yazın)`);
+        }
+      };
+    }
+  });
+}
+
+/* ===================== 10. BERAY-PAINT (32x32 PİKSEL ÇİZİM STÜDYOSU) ===================== */
+let paintState = { drive: 'B:', folder: '', filename: 'BERAY_LOGO.ART' };
+
+function openPaintApp(opts = {}) {
+  if (opts.filename) {
+    paintState = { drive: opts.drive || 'B:', folder: opts.folder || '', filename: opts.filename };
+  }
+
+  const W = 32, H = 32;
+  let pixels = new Array(W * H).fill(0);
+  let activeTool = 'pen';
+  let gridOn = true;
+  let drawing = false;
+
+  createWindow({
+    id: 'paint',
+    title: 'BERAY-PAINT 1975 // 32x32 PİKSEL ÇİZİM STÜDYOSU',
+    dockLabel: '▦ Paint',
+    width: 550,
+    height: 510,
+    html: `
+      <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:6px; padding-bottom:8px; margin-bottom:8px; border-bottom:1px solid var(--dim);">
+        <div style="display:flex; flex-wrap:wrap; gap:5px;">
+          <button id="bp-pen" class="retro-btn active-tool">✎ Kalem</button>
+          <button id="bp-erase" class="retro-btn">⌫ Silgi</button>
+          <button id="bp-fill" class="retro-btn">▨ Kova</button>
+          <button id="bp-grid" class="retro-btn">⊞ Izgara</button>
+          <button id="bp-clear" class="retro-btn">Temizle</button>
+          <button id="bp-save" class="retro-btn" style="font-weight:bold;">Kaydet (.ART)</button>
+          <button id="bp-png" class="retro-btn">PNG İndir</button>
+        </div>
+        <span id="bp-label" style="font-weight:bold; font-size:17px;">${paintState.filename}</span>
+      </div>
+      <div style="flex:1; display:flex; align-items:center; justify-content:center; background:var(--bg); border:1px solid var(--dim); padding:8px; overflow:hidden;">
+        <canvas id="bp-canvas" width="320" height="320" style="border:2px solid var(--fg); cursor:crosshair; max-width:100%; max-height:100%; aspect-ratio:1/1;"></canvas>
+      </div>
+    `,
+    onInit: (win) => {
+      const canvas = win.querySelector('#bp-canvas');
+      const ctx = canvas.getContext('2d');
+      const labelEl = win.querySelector('#bp-label');
+
+      const fs = loadFS();
+      const dir = resolveDir(fs, paintState.drive, paintState.folder);
+      if (dir[paintState.filename]) {
+        try {
+          const parsed = JSON.parse(dir[paintState.filename].content);
+          if (Array.isArray(parsed.pixels) && parsed.pixels.length === W * H) {
+            pixels = [...parsed.pixels];
+          }
+        } catch (e) {}
+      }
+      labelEl.textContent = `${paintState.drive}\\${paintState.filename}`;
+
+      const drawBoard = () => {
+        const st = getComputedStyle(document.body);
+        const fg = st.getPropertyValue('--fg').trim() || '#33ff66';
+        const bg = st.getPropertyValue('--bg').trim() || '#030a04';
+        const dim = st.getPropertyValue('--dim').trim() || '#147a2e';
+
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, 320, 320);
+
+        for (let y = 0; y < H; y++) {
+          for (let x = 0; x < W; x++) {
+            if (pixels[y * W + x] === 1) {
+              ctx.fillStyle = fg;
+              ctx.fillRect(x * 10, y * 10, 10, 10);
+            }
+            if (gridOn) {
+              ctx.strokeStyle = dim;
+              ctx.lineWidth = 0.4;
+              ctx.strokeRect(x * 10, y * 10, 10, 10);
+            }
+          }
+        }
+      };
+
+      const bucketFill = (sx, sy, oldVal, newVal) => {
+        if (oldVal === newVal) return;
+        const q = [[sx, sy]];
+        while (q.length) {
+          const [cx, cy] = q.pop();
+          if (cx < 0 || cx >= W || cy < 0 || cy >= H) continue;
+          const idx = cy * W + cx;
+          if (pixels[idx] !== oldVal) continue;
+          pixels[idx] = newVal;
+          q.push([cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1]);
+        }
+      };
+
+      const paintAt = (cx, cy) => {
+        const r = canvas.getBoundingClientRect();
+        const x = Math.floor(((cx - r.left) / r.width) * W);
+        const y = Math.floor(((cy - r.top) / r.height) * H);
+        if (x < 0 || x >= W || y < 0 || y >= H) return;
+
+        if (activeTool === 'pen') pixels[y * W + x] = 1;
+        else if (activeTool === 'erase') pixels[y * W + x] = 0;
+        else if (activeTool === 'fill') bucketFill(x, y, pixels[y * W + x], 1);
+        drawBoard();
+      };
+
+      canvas.onmousedown = (e) => { drawing = true; paintAt(e.clientX, e.clientY); beep(650, 0.02); };
+      canvas.onmousemove = (e) => { if (drawing && activeTool !== 'fill') paintAt(e.clientX, e.clientY); };
+      window.addEventListener('mouseup', () => { drawing = false; });
+
+      canvas.ontouchstart = (e) => { e.preventDefault(); drawing = true; paintAt(e.touches[0].clientX, e.touches[0].clientY); };
+      canvas.ontouchmove = (e) => { e.preventDefault(); if (drawing) paintAt(e.touches[0].clientX, e.touches[0].clientY); };
+      canvas.ontouchend = () => { drawing = false; };
+
+      const selectTool = (btnId, t) => {
+        activeTool = t;
+        ['#bp-pen', '#bp-erase', '#bp-fill'].forEach(sel => win.querySelector(sel).classList.remove('active-tool'));
+        win.querySelector(btnId).classList.add('active-tool');
+        beep(520, 0.03);
+      };
+
+      win.querySelector('#bp-pen').onclick = () => selectTool('#bp-pen', 'pen');
+      win.querySelector('#bp-erase').onclick = () => selectTool('#bp-erase', 'erase');
+      win.querySelector('#bp-fill').onclick = () => selectTool('#bp-fill', 'fill');
+      win.querySelector('#bp-grid').onclick = () => { gridOn = !gridOn; drawBoard(); beep(480, 0.03); };
+      win.querySelector('#bp-clear').onclick = () => { pixels.fill(0); drawBoard(); beep(320, 0.05); };
+
+      win.querySelector('#bp-save').onclick = () => {
+        openModal({
+          title: 'ÇİZİMİ DİSKE KAYDET (.ART)',
+          msg: 'Dosya adını girin (Disk B:\\ üzerine kaydedilir):',
+          hasInput: true,
+          defaultValue: paintState.filename.endsWith('.ART') ? paintState.filename : paintState.filename + '.ART',
+          onOk: (name) => {
+            let clean = name.trim().toUpperCase();
+            if (!clean) return;
+            if (!clean.endsWith('.ART')) clean += '.ART';
+            const fresh = loadFS();
+            fresh['B:'][clean] = { type: 'file', content: JSON.stringify({ w: W, h: H, pixels }) };
+            saveFS(fresh);
+            paintState = { drive: 'B:', folder: '', filename: clean };
+            labelEl.textContent = `B:\\${clean}`;
+            showToast(`ÇİZİM KAYDEDİLDİ: B:\\${clean}`);
+          }
+        });
+      };
+
+      win.querySelector('#bp-png').onclick = () => {
+        const a = document.createElement('a');
+        a.href = canvas.toDataURL('image/png');
+        a.download = paintState.filename.replace('.ART', '') + '.png';
+        a.click();
+        showToast('PNG GÖRSELİ İNDİRİLDİ');
+      };
+
+      drawBoard();
+    }
+  });
+}
+
+/* ===================== 11. BERAY-DEBUG (MOS 6502 ASSEMBLY DEBUGGER) ===================== */
+function openDebugApp(opts = {}) {
+  const cpu = { A: 0, X: 0, Y: 0, PC: 0x0600, SP: 0xFF, N: 0, V: 0, B: 0, D: 0, I: 0, Z: 1, C: 0 };
+  const mem = new Uint8Array(768); // $0000 - $02FF
+  const modifiedSet = new Set();
+  let lines = [];
+  let lineIdx = 0;
+
+  createWindow({
+    id: 'debug',
+    title: 'BERAY-DEBUG // MOS 6502 ASSEMBLY HATA AYIKLAYICI',
+    dockLabel: '⚙ 6502 Debug',
+    width: 680,
+    height: 490,
+    html: `
+      <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:6px; padding-bottom:8px; margin-bottom:8px; border-bottom:1px solid var(--dim);">
+        <div style="display:flex; gap:6px;">
+          <button id="db-step" class="retro-btn" style="font-weight:bold;">⏭ ADIM (STEP)</button>
+          <button id="db-run" class="retro-btn" style="font-weight:bold;">▶ ÇALIŞTIR (RUN)</button>
+          <button id="db-reset" class="retro-btn">↻ SIFIRLA</button>
+        </div>
+        <span id="db-line-info" style="font-weight:bold;">HAZIR (PC: $0600)</span>
+      </div>
+
+      <!-- Register Paneli -->
+      <div id="db-regs" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(85px, 1fr)); gap:6px; background:var(--bg); border:1px solid var(--fg); padding:8px; margin-bottom:8px; text-align:center; font-size:19px;"></div>
+
+      <div style="flex:1; display:grid; grid-template-columns:1fr 1.25fr; gap:8px; overflow:hidden;">
+        <div style="display:flex; flex-direction:column; overflow:hidden;">
+          <div style="font-weight:bold; margin-bottom:4px;">6502 ASSEMBLY KODU:</div>
+          <textarea id="db-code" style="flex:1; background:var(--bg); color:var(--fg); border:1px solid var(--dim); padding:8px; font-size:18px; outline:none; resize:none;" spellcheck="false"></textarea>
+        </div>
+        <div style="display:flex; flex-direction:column; overflow:hidden;">
+          <div style="font-weight:bold; margin-bottom:4px;">BELLEK DÖKÜMÜ ($0200 - $027F):</div>
+          <div id="db-mem" style="flex:1; overflow-y:auto; background:var(--bg); border:1px solid var(--dim); padding:8px; font-size:17px; line-height:1.25;"></div>
+        </div>
+      </div>
+    `,
+    onInit: (win) => {
+      const codeEl = win.querySelector('#db-code');
+      const regsEl = win.querySelector('#db-regs');
+      const memEl = win.querySelector('#db-mem');
+      const infoEl = win.querySelector('#db-line-info');
+
+      const fs = loadFS();
+      const demoFile = (opts.filename && resolveDir(fs, opts.drive || 'A:', opts.folder || '')[opts.filename]) || fs['A:']['DEMO.ASM'];
+      codeEl.value = demoFile ? demoFile.content : 'LDA #$10\nSTA $0200\nINX\nSTX $0201\nBRK';
+
+      const hex2 = (v) => (v & 0xFF).toString(16).toUpperCase().padStart(2, '0');
+      const hex4 = (v) => (v & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+
+      const updateZN = (val) => {
+        const b = val & 0xFF;
+        cpu.Z = b === 0 ? 1 : 0;
+        cpu.N = (b & 0x80) ? 1 : 0;
+      };
+
+      const renderDebugUI = () => {
+        const flags = `${cpu.N ? 'N' : '-'}${cpu.V ? 'V' : '-'}-B${cpu.D ? 'D' : '-'}${cpu.I ? 'I' : '-'}${cpu.Z ? 'Z' : '-'}${cpu.C ? 'C' : '-'}`;
+        regsEl.innerHTML = `
+          <div>A: <b>$${hex2(cpu.A)}</b></div>
+          <div>X: <b>$${hex2(cpu.X)}</b></div>
+          <div>Y: <b>$${hex2(cpu.Y)}</b></div>
+          <div>PC: <b>$${hex4(cpu.PC)}</b></div>
+          <div>SP: <b>$${hex2(cpu.SP)}</b></div>
+          <div>FLAGS: <b>${flags}</b></div>
+        `;
+
+        let memHtml = '';
+        for (let row = 0x0200; row < 0x0280; row += 8) {
+          memHtml += `<div><span style="opacity:0.7;">$${hex4(row)}:</span> `;
+          for (let col = 0; col < 8; col++) {
+            const addr = row + col;
+            const valStr = hex2(mem[addr]);
+            if (modifiedSet.has(addr)) {
+              memHtml += `<span style="background:var(--fg); color:var(--bg); padding:0 2px; font-weight:bold;">${valStr}</span> `;
+            } else {
+              memHtml += `${valStr} `;
+            }
+          }
+          memHtml += '</div>';
+        }
+        memEl.innerHTML = memHtml;
+      };
+
+      const parseOperand = (op) => {
+        if (!op) return { mode: 'imp', val: 0 };
+        op = op.trim().toUpperCase();
+        if (op.startsWith('#$')) return { mode: 'imm', val: parseInt(op.slice(2), 16) & 0xFF };
+        if (op.startsWith('#')) return { mode: 'imm', val: parseInt(op.slice(1), 10) & 0xFF };
+        if (op.startsWith('$')) return { mode: 'abs', val: parseInt(op.slice(1), 16) & 0x02FF };
+        return { mode: 'abs', val: parseInt(op, 10) & 0x02FF };
+      };
+
+      const execOneStep = () => {
+        if (lineIdx === 0) {
+          lines = codeEl.value.split('\n').map(l => l.split(';')[0].trim()).filter(Boolean);
+        }
+        if (lineIdx >= lines.length) {
+          infoEl.textContent = 'PROGRAM SONLANDI (BRK)';
+          return false;
+        }
+
+        const inst = lines[lineIdx];
+        const parts = inst.split(/\s+/);
+        const op = parts[0].toUpperCase();
+        const arg = parseOperand(parts[1]);
+
+        if (op === 'LDA') {
+          cpu.A = arg.mode === 'imm' ? arg.val : mem[arg.val];
+          updateZN(cpu.A);
+        } else if (op === 'LDX') {
+          cpu.X = arg.mode === 'imm' ? arg.val : mem[arg.val];
+          updateZN(cpu.X);
+        } else if (op === 'LDY') {
+          cpu.Y = arg.mode === 'imm' ? arg.val : mem[arg.val];
+          updateZN(cpu.Y);
+        } else if (op === 'STA') {
+          mem[arg.val] = cpu.A;
+          modifiedSet.add(arg.val);
+        } else if (op === 'STX') {
+          mem[arg.val] = cpu.X;
+          modifiedSet.add(arg.val);
+        } else if (op === 'STY') {
+          mem[arg.val] = cpu.Y;
+          modifiedSet.add(arg.val);
+        } else if (op === 'ADC') {
+          const v = arg.mode === 'imm' ? arg.val : mem[arg.val];
+          const sum = cpu.A + v + cpu.C;
+          cpu.C = sum > 255 ? 1 : 0;
+          cpu.A = sum & 0xFF;
+          updateZN(cpu.A);
+        } else if (op === 'SBC') {
+          const v = arg.mode === 'imm' ? arg.val : mem[arg.val];
+          const diff = cpu.A - v;
+          cpu.C = diff >= 0 ? 1 : 0;
+          cpu.A = diff & 0xFF;
+          updateZN(cpu.A);
+        } else if (op === 'INX') {
+          cpu.X = (cpu.X + 1) & 0xFF;
+          updateZN(cpu.X);
+        } else if (op === 'INY') {
+          cpu.Y = (cpu.Y + 1) & 0xFF;
+          updateZN(cpu.Y);
+        } else if (op === 'DEX') {
+          cpu.X = (cpu.X - 1) & 0xFF;
+          updateZN(cpu.X);
+        } else if (op === 'DEY') {
+          cpu.Y = (cpu.Y - 1) & 0xFF;
+          updateZN(cpu.Y);
+        } else if (op === 'TAX') {
+          cpu.X = cpu.A;
+          updateZN(cpu.X);
+        } else if (op === 'TXA') {
+          cpu.A = cpu.X;
+          updateZN(cpu.A);
+        } else if (op === 'CLC') {
+          cpu.C = 0;
+        } else if (op === 'SEC') {
+          cpu.C = 1;
+        } else if (op === 'BRK') {
+          cpu.B = 1;
+          lineIdx = lines.length;
+          infoEl.textContent = `BRK İŞLENDİ (PC: $${hex4(cpu.PC)})`;
+          renderDebugUI();
+          return false;
+        }
+
+        cpu.PC += 2;
+        lineIdx++;
+        infoEl.textContent = `YÜRÜTÜLDÜ: ${inst} (PC: $${hex4(cpu.PC)})`;
+        renderDebugUI();
+        return true;
+      };
+
+      const resetCpu = () => {
+        Object.assign(cpu, { A: 0, X: 0, Y: 0, PC: 0x0600, SP: 0xFF, N: 0, V: 0, B: 0, D: 0, I: 0, Z: 1, C: 0 });
+        mem.fill(0);
+        modifiedSet.clear();
+        lineIdx = 0;
+        infoEl.textContent = 'CPU SIFIRLANDI (PC: $0600)';
+        renderDebugUI();
+      };
+
+      win.querySelector('#db-step').onclick = () => { beep(640, 0.04); execOneStep(); };
+      win.querySelector('#db-run').onclick = () => {
+        beep(780, 0.07);
+        let guard = 0;
+        while (execOneStep() && guard++ < 200) {}
+      };
+      win.querySelector('#db-reset').onclick = () => { beep(340, 0.05); resetCpu(); };
+
+      renderDebugUI();
+    }
+  });
+}
+
+/* ===================== 12. HUNT THE WUMPUS (1975 KLASİK MAĞARA OYUNU) ===================== */
+function openHuntApp() {
+  // 20 Odalı Dodecahedron Mağara Haritası
+  const CAVE = {
+    1:[2,5,8], 2:[1,3,10], 3:[2,4,12], 4:[3,5,14], 5:[1,4,6],
+    6:[5,7,15], 7:[6,8,17], 8:[1,7,9], 9:[8,10,18], 10:[2,9,11],
+    11:[10,12,19], 12:[3,11,13], 13:[12,14,20], 14:[4,13,15], 15:[6,14,16],
+    16:[15,17,20], 17:[7,16,18], 18:[9,17,19], 19:[11,18,20], 20:[13,16,19]
+  };
+
+  let playerRoom = 1;
+  let wumpusRoom = 12;
+  let pitRooms = [6, 14];
+  let batRooms = [9, 17];
+  let arrows = 5;
+  let score = 0;
+  let gameOver = false;
+
+  createWindow({
+    id: 'hunt',
+    title: 'HUNT THE WUMPUS // 1975 BERAY ARCADE EDITION',
+    dockLabel: '★ Wumpus',
+    width: 560,
+    height: 450,
+    html: `
+      <div style="display:flex; justify-content:space-between; align-items:center; padding-bottom:6px; margin-bottom:8px; border-bottom:1px solid var(--dim);">
+        <span id="hw-hud" style="font-weight:bold;">ODA: 1 | OK: 5 | SKOR: 0</span>
+        <button id="hw-restart" class="retro-btn">Yeni Mağara</button>
+      </div>
+      <div id="hw-log" style="flex:1; overflow-y:auto; background:var(--bg); border:1px solid var(--dim); padding:10px; font-size:19px; line-height:1.35; margin-bottom:8px;"></div>
+      <div style="display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; align-items:center;">
+        <div id="hw-move-btns" style="display:flex; gap:6px; align-items:center;"></div>
+        <div id="hw-shoot-btns" style="display:flex; gap:6px; align-items:center;"></div>
+      </div>
+    `,
+    onInit: (win) => {
+      const logEl = win.querySelector('#hw-log');
+      const hudEl = win.querySelector('#hw-hud');
+      const moveBox = win.querySelector('#hw-move-btns');
+      const shootBox = win.querySelector('#hw-shoot-btns');
+
+      const writeLog = (msg, bold = false) => {
+        const d = document.createElement('div');
+        if (bold) { d.style.fontWeight = 'bold'; d.classList.add('glow'); }
+        d.textContent = msg;
+        logEl.appendChild(d);
+        logEl.scrollTop = logEl.scrollHeight;
+      };
+
+      const recordWumpusWin = (pts) => {
+        const fs = loadFS();
+        const prev = fs['B:']['SKORLAR.TXT'] ? fs['B:']['SKORLAR.TXT'].content : '';
+        fs['B:']['SKORLAR.TXT'] = {
+          type: 'file',
+          content: prev + `\nWUMPUS AVLANDI! SKOR: ${pts} (${new Date().toLocaleTimeString()})`
+        };
+        saveFS(fs);
+      };
+
+      const initCave = () => {
+        const rooms = Array.from({ length: 20 }, (_, i) => i + 1).sort(() => Math.random() - 0.5);
+        playerRoom = rooms[0];
+        wumpusRoom = rooms[1];
+        pitRooms = [rooms[2], rooms[3]];
+        batRooms = [rooms[4], rooms[5]];
+        arrows = 5;
+        gameOver = false;
+        logEl.innerHTML = '';
+        writeLog('=== HUNT THE WUMPUS (1975) ===', true);
+        writeLog('Karanlık mağara tünellerinde dev Wumpus saklanıyor. Duyularını kullanarak yerini bul ve okunla avla!');
+        describeRoom();
+      };
+
+      const describeRoom = () => {
+        hudEl.textContent = `ODA: ${playerRoom} | OK: ${arrows} | SKOR: ${score}`;
+        const exits = CAVE[playerRoom];
+        writeLog(`\nŞu an ${playerRoom}. Odadasın. Bağlantılı tüneller: [ ${exits.join(' - ')} ]`, true);
+
+        exits.forEach(adj => {
+          if (adj === wumpusRoom) writeLog('! Burnuna keskin ve korkunç bir WUMPUS kokusu geliyor...');
+          if (pitRooms.includes(adj)) writeLog('! Derinlerden soğuk bir rüzgar esiyor (Yakında dipsiz kuyu var)...');
+          if (batRooms.includes(adj)) writeLog('! Yukarıdan kanat çırpma sesleri duyuluyor (Dev yarasalar)...');
+        });
+
+        moveBox.innerHTML = '<span>İlerle:</span>';
+        shootBox.innerHTML = '<span>Ok At:</span>';
+
+        exits.forEach(target => {
+          const mBtn = document.createElement('button');
+          mBtn.className = 'retro-btn';
+          mBtn.textContent = `Oda ${target}`;
+          mBtn.disabled = gameOver;
+          mBtn.onclick = () => movePlayer(target);
+          moveBox.appendChild(mBtn);
+
+          const sBtn = document.createElement('button');
+          sBtn.className = 'retro-btn';
+          sBtn.textContent = `🏹 ${target}`;
+          sBtn.disabled = gameOver;
+          sBtn.onclick = () => shootArrow(target);
+          shootBox.appendChild(sBtn);
+        });
+      };
+
+      const movePlayer = (dest) => {
+        if (gameOver) return;
+        beep(480, 0.04);
+        playerRoom = dest;
+
+        if (playerRoom === wumpusRoom) {
+          writeLog('EYVAH! Wumpus\'un odasına girdin ve seni yakaladı! OYUN BİTTİ.', true);
+          beep(150, 0.3, 'sawtooth');
+          gameOver = true;
+          describeRoom();
+          return;
+        }
+        if (pitRooms.includes(playerRoom)) {
+          writeLog('DİPSİZ KUYUYA DÜŞTÜN! Mağaranın derinliklerinde kayboldun. OYUN BİTTİ.', true);
+          beep(140, 0.3, 'sawtooth');
+          gameOver = true;
+          describeRoom();
+          return;
+        }
+        if (batRooms.includes(playerRoom)) {
+          const rnd = Math.floor(Math.random() * 20) + 1;
+          writeLog(`DEV YARASALAR SENİ KAPTI! Havada uçarak ${rnd}. odaya bıraktılar!`);
+          beep(700, 0.08);
+          movePlayer(rnd);
+          return;
+        }
+        describeRoom();
+      };
+
+      const shootArrow = (target) => {
+        if (gameOver) return;
+        arrows--;
+        beep(840, 0.07);
+        if (target === wumpusRoom) {
+          score += 100 + arrows * 20;
+          writeLog(`TAM İSABET! Okun karanlığı yardı ve Wumpus'u avladın! KAZANDIN! (+${100 + arrows * 20} Puan)`, true);
+          beep(980, 0.15);
+          gameOver = true;
+          recordWumpusWin(score);
+          describeRoom();
+          return;
+        }
+        writeLog(`Ok ${target}. odaya gitti ama boşluğa çarptı! Gürültü Wumpus'u uyandırdı...`);
+        const wExits = CAVE[wumpusRoom];
+        wumpusRoom = wExits[Math.floor(Math.random() * wExits.length)];
+        if (wumpusRoom === playerRoom) {
+          writeLog('Wumpus senin odana daldı! OYUN BİTTİ.', true);
+          gameOver = true;
+        } else if (arrows <= 0) {
+          writeLog('HİÇ OKUN KALMADI! Silahsız kaldın. OYUN BİTTİ.', true);
+          gameOver = true;
+        }
+        describeRoom();
+      };
+
+      win.querySelector('#hw-restart').onclick = initCave;
+      initCave();
+    }
+  });
+}
+
+/* ===================== 13. BERAY-NET (1975 BBS / ARPANET SİMÜLATÖRÜ) ===================== */
+const BBS_STORAGE_KEY = 'BERAY_NET_1975_POSTS';
+const DEFAULT_BBS_POSTS = {
+  'BERAY-HQ': [
+    { author: 'SYSOP_BERAY', time: '14.10.1975', text: 'BERAY-NET ana düğümüne hoş geldiniz! 300 Baud akustik modem bağlantısı aktif.' },
+    { author: 'MUHENDIS_01', time: '15.10.1975', text: 'Yeni 6502 assembler rutini Disk A:\\DEMO.ASM dosyasına yüklendi.' }
+  ],
+  'ISTANBUL-NODE': [
+    { author: 'BOGAZICI_LAB', time: '18.10.1975', text: 'İstanbul düğümünden tüm BERAY-OS kullanıcılarına selamlar!' }
+  ],
+  'MIT-AI-LAB': [
+    { author: 'HACKER_75', time: '20.10.1975', text: 'ARPANET üzerinden BERAY prototip terminaline başarıyla bağlanıldı.' }
+  ]
+};
+
+function loadBbsPosts() {
+  try {
+    return JSON.parse(localStorage.getItem(BBS_STORAGE_KEY)) || JSON.parse(JSON.stringify(DEFAULT_BBS_POSTS));
+  } catch (e) {
+    return JSON.parse(JSON.stringify(DEFAULT_BBS_POSTS));
+  }
+}
+
+function openNetApp() {
+  let activeNode = 'BERAY-HQ';
+
+  createWindow({
+    id: 'net',
+    title: 'BERAY-NET // 1975 BBS & ARPANET MODEM TERMİNALİ (300 BAUD)',
+    dockLabel: '☎ BERAY-Net',
+    width: 600,
+    height: 460,
+    html: `
+      <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:6px; padding-bottom:8px; margin-bottom:8px; border-bottom:1px solid var(--dim);">
+        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+          <button id="bn-hq" class="retro-btn active-tool">BERAY-HQ</button>
+          <button id="bn-ist" class="retro-btn">ISTANBUL-NODE</button>
+          <button id="bn-mit" class="retro-btn">MIT-AI-LAB</button>
+        </div>
+        <span id="bn-baud" style="font-size:17px; font-weight:bold;">BAĞLI: 300 BAUD</span>
+      </div>
+
+      <div id="bn-feed" style="flex:1; overflow-y:auto; background:var(--bg); border:1px solid var(--dim); padding:10px; font-size:19px; line-height:1.35; margin-bottom:8px;"></div>
+
+      <div style="display:flex; gap:6px;">
+        <input id="bn-msg" type="text" class="retro-input" style="flex:1;" placeholder="BBS panosuna yeni mesaj yazın..." />
+        <button id="bn-send" class="retro-btn" style="font-weight:bold;">GÖNDER</button>
+      </div>
+    `,
+    onInit: (win) => {
+      const feedEl = win.querySelector('#bn-feed');
+      const baudEl = win.querySelector('#bn-baud');
+      const msgIn = win.querySelector('#bn-msg');
+
+      const renderBoard = () => {
+        const posts = loadBbsPosts();
+        const list = posts[activeNode] || [];
+        feedEl.innerHTML = `<div style="font-weight:bold; border-bottom:1px dashed var(--dim); padding-bottom:4px; margin-bottom:8px;" class="glow">=== SUNUCU: ${activeNode} MESAJ PANOSU ===</div>`;
+        list.forEach(item => {
+          const row = document.createElement('div');
+          row.style.marginBottom = '10px';
+          row.innerHTML = `<div style="opacity:0.8; font-size:17px;">[${item.time}] <b>@${item.author}</b>:</div><div>${item.text}</div>`;
+          feedEl.appendChild(row);
+        });
+        feedEl.scrollTop = feedEl.scrollHeight;
+      };
+
+      const dialNode = (nodeName, btnSel) => {
+        activeNode = nodeName;
+        ['#bn-hq', '#bn-ist', '#bn-mit'].forEach(s => win.querySelector(s).classList.remove('active-tool'));
+        win.querySelector(btnSel).classList.add('active-tool');
+        baudEl.textContent = 'ARANIYOR...';
+        feedEl.innerHTML = `<div>ATDT 1975-${nodeName}...</div><div>AKUSTİK MODEM EL SIKIŞMASI BEKLENİYOR...</div>`;
+        modemHandshakeSound();
+        setTimeout(() => {
+          baudEl.textContent = 'BAĞLI: 300 BAUD';
+          renderBoard();
+        }, 680);
+      };
+
+      win.querySelector('#bn-hq').onclick = () => dialNode('BERAY-HQ', '#bn-hq');
+      win.querySelector('#bn-ist').onclick = () => dialNode('ISTANBUL-NODE', '#bn-ist');
+      win.querySelector('#bn-mit').onclick = () => dialNode('MIT-AI-LAB', '#bn-mit');
+
+      const postMessage = () => {
+        const txt = msgIn.value.trim();
+        if (!txt) return;
+        msgIn.value = '';
+        const posts = loadBbsPosts();
+        if (!posts[activeNode]) posts[activeNode] = [];
+        posts[activeNode].push({
+          author: 'BERAY_KULLANICI',
+          time: new Date().toLocaleTimeString(),
+          text: txt
+        });
+        localStorage.setItem(BBS_STORAGE_KEY, JSON.stringify(posts));
+        beep(680, 0.05);
+        renderBoard();
+      };
+
+      win.querySelector('#bn-send').onclick = postMessage;
+      msgIn.onkeydown = (e) => { if (e.key === 'Enter') postMessage(); };
+
+      renderBoard();
+    }
+  });
+}
+
+/* ===================== 14. SİSTEM & GITHUB PAGES YAYINLAMA MERKEZİ ===================== */
+function openSettingsApp() {
+  createWindow({
+    id: 'settings',
+    title: 'BERAY SİSTEM AYARLARI & GITHUB PAGES YAYINLAMA MERKEZİ',
+    dockLabel: '⚙ Sistem & GitHub',
+    width: 600,
+    height: 460,
+    html: `
+      <div style="overflow-y:auto; display:flex; flex-direction:column; gap:12px; padding-right:4px;">
+        <div style="border:1px solid var(--fg); background:var(--bg); padding:12px; border-radius:4px;">
+          <div style="font-size:22px; font-weight:bold; margin-bottom:8px;" class="glow">1. BERAY DONANIM &amp; CRT MONİTÖR AYARLARI</div>
+          <div style="font-size:18px; margin-bottom:8px; opacity:0.9;">Üretici: BERAY Computer Corp. (1975) | CPU: MOS 6502 | Bellek: 64KB RAM</div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
+            <button class="retro-btn" onclick="setTheme('green')">Yeşil Fosfor (1975)</button>
+            <button class="retro-btn" onclick="setTheme('amber')">Sıcak Kehribar</button>
+            <button class="retro-btn" onclick="setTheme('paper')">1975 Kağıt Beyazı</button>
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <button class="retro-btn" onclick="toggleScanlines()">CRT Tarama Çizgileri Aç/Kapat</button>
+            <button class="retro-btn" onclick="toggleAudio()">Sistem Seslerini Aç/Kapat</button>
+          </div>
+        </div>
+
+        <div style="border:1px solid var(--dim); background:var(--bg); padding:12px; border-radius:4px;">
+          <div style="font-size:22px; font-weight:bold; margin-bottom:6px;" class="glow">2. GITHUB PAGES ÜZERİNDE YAYINLAMA</div>
+          <p style="font-size:18px; margin:0 0 8px 0;">BERAY-OS 1975 işletim sistemini kendi GitHub deponuzda canlı olarak yayınlamak için:</p>
+          <ol style="margin:0 0 12px 20px; padding:0; font-size:18px; line-height:1.35;">
+            <li>Aşağıdaki <b>"index.html İndir (GitHub Pages Hazır)"</b> butonuna tıklayın.</li>
+            <li>GitHub'da yeni bir repository oluşturun ve indirdiğiniz <b>index.html</b> dosyasını yükleyin.</li>
+            <li>Repo ayarlarından <b>Settings &gt; Pages</b> sekmesine girip <b>main</b> dalını seçerek kaydedin.</li>
+          </ol>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <button id="gh-download-btn" class="retro-btn" style="font-weight:bold; font-size:20px; padding:6px 14px;">⬇ index.html İndir (GitHub Pages Hazır)</button>
+            <button id="gh-reset-fs-btn" class="retro-btn">Disketleri Sıfırla</button>
+          </div>
+        </div>
+      </div>
+    `,
+    onInit: (win) => {
+      win.querySelector('#gh-download-btn').onclick = () => {
+        const clone = document.documentElement.cloneNode(true);
+        const wl = clone.querySelector('#win-layer');
+        if (wl) wl.innerHTML = '';
+        const dt = clone.querySelector('#dock-tasks');
+        if (dt) dt.innerHTML = '';
+        const bs = clone.querySelector('#boot-screen');
+        if (bs) bs.classList.remove('hidden');
+
+        const fullHtml = '<!DOCTYPE html>\n' + clone.outerHTML;
+        const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'index.html';
+        a.click();
+        beep(820, 0.12);
+        showToast('index.html GITHUB PAGES İÇİN İNDİRİLDİ');
+      };
+
+      win.querySelector('#gh-reset-fs-btn').onclick = () => {
+        openModal({
+          title: 'DİSKETLERİ SIFIRLA',
+          msg: 'Disk A:\\ ve Disk B:\\ üzerindeki tüm özel dosyalar silinip başlangıç dosyaları yüklensin mi?',
+          onOk: () => {
+            localStorage.setItem(FS_KEY, JSON.stringify(DEFAULT_FS));
+            if (winMap['files']) renderFilesWindow(winMap['files'].el);
+            showToast('DİSKETLER FABRİKA AYARINA DÖNDÜ');
+          }
+        });
+      };
+    }
+  });
+}
+
+/* ===================== 15. BAŞLATICI ===================== */
+window.onload = function () {
+  startBootSequence();
+};
+</script>
+</body>
+</html>
