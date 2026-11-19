@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1020">
+  <title>BYSAM | Yönetim Paneli</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{color-scheme:dark;--bg:#0b1020;--surface:#111a2d;--surface2:#172239;--line:rgba(173,190,219,.13);--text:#edf3ff;--muted:#92a1bd;--primary:#7c8cff;--primary2:#9b7cff;--cyan:#54d6e8;--green:#39d7a2;--red:#ff7185;--amber:#f4bd61;--radius:18px;--shadow:0 20px 60px rgba(0,0,0,.28)}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 18% 0%,rgba(90,107,220,.16),transparent 36%),radial-gradient(ellipse at 95% 10%,rgba(53,194,205,.10),transparent 32%),var(--bg);color:var(--text);font-family:'DM Sans',sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer}.hidden{display:none!important}
+    .login-wrap{min-height:100vh;display:grid;place-items:center;padding:24px}.login-card{width:min(440px,100%);background:rgba(17,26,45,.92);border:1px solid var(--line);border-radius:26px;padding:34px;box-shadow:var(--shadow);backdrop-filter:blur(18px)}.brand-mark{width:46px;height:46px;display:grid;place-items:center;border-radius:15px;background:linear-gradient(135deg,var(--primary),var(--cyan));color:#091222;font:800 20px Manrope,sans-serif;box-shadow:0 10px 30px rgba(124,140,255,.22)}.brand-row{display:flex;gap:13px;align-items:center}.brand-row h1{font:800 21px Manrope;margin:0}.brand-row p{color:var(--muted);font-size:12px;margin:3px 0 0}.login-card h2{font:800 26px Manrope;margin:30px 0 7px}.sub{color:var(--muted);font-size:14px;line-height:1.6;margin:0 0 24px}
+    .field{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}.field label{font-size:13px;color:#bdc9dd;font-weight:700}.input,select,textarea{width:100%;border:1px solid var(--line);background:#0d1628;color:var(--text);border-radius:12px;padding:12px 14px;outline:none;transition:.18s}.input:focus,select:focus,textarea:focus{border-color:rgba(124,140,255,.8);box-shadow:0 0 0 3px rgba(124,140,255,.12)}textarea{resize:vertical;min-height:90px}.btn{border:1px solid transparent;border-radius:12px;padding:11px 15px;font-weight:700;transition:transform .15s,filter .15s,background .15s}.btn:hover{filter:brightness(1.08);transform:translateY(-1px)}.btn:disabled{opacity:.55;cursor:not-allowed;transform:none}.btn-primary{background:linear-gradient(120deg,var(--primary),var(--primary2));color:white;box-shadow:0 8px 24px rgba(124,140,255,.2)}.btn-soft{background:rgba(124,140,255,.11);border-color:rgba(124,140,255,.2);color:#cbd2ff}.btn-ghost{background:rgba(255,255,255,.035);border-color:var(--line);color:var(--text)}.btn-danger{background:rgba(255,113,133,.1);border-color:rgba(255,113,133,.25);color:#ff9baa}.btn-full{width:100%}.login-error,.notice{font-size:13px;line-height:1.5;border-radius:12px;padding:11px 13px;margin-top:13px}.login-error{color:#ffb1bc;background:rgba(255,113,133,.1);border:1px solid rgba(255,113,133,.22)}.notice{color:#b9c9e5;background:rgba(124,140,255,.08);border:1px solid rgba(124,140,255,.15)}
+    .app{min-height:100vh;display:grid;grid-template-columns:250px minmax(0,1fr)}.sidebar{border-right:1px solid var(--line);background:rgba(10,16,31,.68);padding:24px 16px;display:flex;flex-direction:column;gap:28px}.side-brand{padding:0 10px}.side-brand .brand-row h1{font-size:19px}.side-label{font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:#697a9a;font-weight:800;padding:0 12px;margin-bottom:8px}.nav{display:flex;flex-direction:column;gap:5px}.nav button{display:flex;align-items:center;gap:12px;text-align:left;border:1px solid transparent;color:#9eacc5;background:transparent;padding:11px 13px;border-radius:12px;font-weight:600}.nav button.active,.nav button:hover{background:rgba(124,140,255,.12);border-color:rgba(124,140,255,.16);color:#e5e9ff}.nav-ico{width:22px;text-align:center;font-size:17px}.sidebar-foot{margin-top:auto;padding:13px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.025)}.sidebar-foot small{display:block;color:var(--muted);font-size:11px}.sidebar-foot strong{display:block;font-size:13px;margin:5px 0 10px;overflow-wrap:anywhere}.main{min-width:0;padding:28px clamp(18px,3vw,42px) 50px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:28px}.eyebrow{color:var(--cyan);letter-spacing:1.7px;font-size:10px;font-weight:800;text-transform:uppercase}.page-title{font:800 clamp(24px,3vw,32px) Manrope;margin:5px 0}.page-sub{font-size:13px;color:var(--muted);margin:0}.top-actions{display:flex;gap:10px;align-items:center}.avatar{height:38px;width:38px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,#334a77,#7663bc);font-weight:800}.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:25px}.stat{border:1px solid var(--line);border-radius:var(--radius);padding:19px;background:linear-gradient(145deg,rgba(23,34,57,.95),rgba(17,26,45,.82));box-shadow:0 12px 30px rgba(0,0,0,.1)}.stat-top{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px;font-weight:700}.stat-icon{height:34px;width:34px;border-radius:11px;display:grid;place-items:center;background:rgba(124,140,255,.14);font-size:17px}.stat strong{display:block;font:800 29px Manrope;margin-top:15px}.stat-foot{font-size:11px;color:#7383a2;margin-top:4px}
+    .panel{background:rgba(17,26,45,.82);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 14px 40px rgba(0,0,0,.12);overflow:hidden}.panel-head{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px}.panel-head h3{font:800 15px Manrope;margin:0}.panel-head p{font-size:12px;color:var(--muted);margin:4px 0 0}.search{max-width:290px;position:relative}.search input{padding-left:37px}.search span{position:absolute;left:13px;top:11px;color:#7182a2}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:720px}th{text-align:left;color:#7182a2;text-transform:uppercase;letter-spacing:1px;font-size:10px;padding:14px 20px;background:rgba(255,255,255,.015)}td{padding:15px 20px;border-top:1px solid rgba(173,190,219,.08);font-size:13px;color:#c7d2e7}tr:hover td{background:rgba(255,255,255,.018)}.site-name{font-weight:800;color:#f0f4ff}.domain{color:#97a6ff;font-size:12px;margin-top:4px}.status{display:inline-flex;align-items:center;gap:6px;border-radius:20px;padding:5px 9px;font-size:11px;font-weight:800}.status:before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}.status-published{color:var(--green);background:rgba(57,215,162,.1)}.status-draft{color:var(--amber);background:rgba(244,189,97,.1)}.status-disabled{color:#a9b5ca;background:rgba(169,181,202,.1)}.actions{display:flex;gap:6px;white-space:nowrap}.icon-btn{height:32px;width:34px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.035);color:#bbc8df}.icon-btn:hover{background:rgba(124,140,255,.15);color:white}.empty{text-align:center;padding:50px 20px;color:var(--muted)}.empty .big{font-size:30px;margin-bottom:10px}
+    .editor{margin-top:20px}.editor-body{padding:20px}.editor-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.span-2{grid-column:1/-1}.domain-preview{border:1px dashed rgba(124,140,255,.35);border-radius:12px;padding:12px 14px;background:rgba(124,140,255,.06);color:#cbd2ff;font-weight:700;font-size:13px}.upload-box{border:1px dashed rgba(124,140,255,.4);background:rgba(124,140,255,.045);border-radius:15px;padding:22px;text-align:center;cursor:pointer;transition:.15s}.upload-box:hover{border-color:var(--cyan);background:rgba(84,214,232,.05)}.upload-box .upload-ico{font-size:24px}.upload-box strong{display:block;margin:8px 0 4px;font-size:13px}.upload-box p{margin:0;color:var(--muted);font-size:11px}.file-list{display:flex;flex-direction:column;gap:7px;margin-top:12px}.file-item{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:12px;color:#bdc9dd}.file-item small{color:#7585a2;display:block;margin-top:3px}.editor-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px;padding-top:17px;border-top:1px solid var(--line)}.toast{position:fixed;right:22px;bottom:22px;max-width:min(420px,calc(100vw - 44px));background:#17243b;border:1px solid rgba(84,214,232,.3);border-radius:13px;padding:13px 16px;color:#e9f7ff;box-shadow:var(--shadow);z-index:100;transform:translateY(20px);opacity:0;pointer-events:none;transition:.22s;font-size:13px}.toast.show{transform:translateY(0);opacity:1}.footer-note{color:#6f7e9b;font-size:11px;margin-top:16px;line-height:1.6}
+    @media(max-width:850px){.app{grid-template-columns:1fr}.sidebar{border-right:0;border-bottom:1px solid var(--line);padding:13px 16px;gap:12px}.side-brand{padding:0 5px}.sidebar .side-label,.sidebar-foot{display:none}.nav{flex-direction:row;overflow:auto}.nav button{white-space:nowrap;padding:9px 11px}.main{padding-top:20px}}
+    @media(max-width:600px){.stats{grid-template-columns:1fr}.topbar{align-items:flex-start}.top-actions .btn{padding:9px 10px;font-size:12px}.editor-grid{grid-template-columns:1fr}.span-2{grid-column:auto}.panel-head{align-items:flex-start;flex-direction:column}.search{max-width:none;width:100%}.login-card{padding:25px}}
+  </style>
+
+<style id="bysam-preview-studio-style">
+  .preview-modal{position:fixed;inset:0;z-index:250;background:rgba(3,7,18,.78);backdrop-filter:blur(12px);display:grid;place-items:center;padding:20px}
+  .preview-modal.hidden{display:none!important}
+  .preview-card{width:min(1320px,100%);height:min(860px,calc(100vh - 40px));min-height:420px;display:flex;flex-direction:column;background:#0c1425;border:1px solid rgba(177,195,235,.2);border-radius:20px;box-shadow:0 35px 100px rgba(0,0,0,.56);overflow:hidden}
+  .preview-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 18px;background:rgba(20,30,52,.96);border-bottom:1px solid rgba(177,195,235,.12)}
+  .preview-head strong{font:800 14px Manrope,sans-serif;color:#f1f5ff}.preview-head small{display:block;margin-top:3px;color:#8fa0be;font-size:11px}
+  .preview-head-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .preview-tabs{display:flex;gap:5px;padding:5px;border-radius:11px;background:rgba(255,255,255,.045);border:1px solid rgba(177,195,235,.12)}
+  .preview-tab{border:0;border-radius:8px;padding:8px 12px;background:transparent;color:#9eacc6;font:700 11px 'DM Sans',sans-serif;cursor:pointer}
+  .preview-tab.active{background:linear-gradient(120deg,#7688ff,#9279ed);color:white;box-shadow:0 5px 16px rgba(115,130,255,.22)}
+  .preview-close{height:34px;width:36px;border:1px solid rgba(177,195,235,.15);border-radius:10px;background:rgba(255,255,255,.05);color:#dce6f9;font-size:17px;cursor:pointer}
+  .preview-workspace{flex:1;min-height:0;display:grid;grid-template-columns:260px minmax(0,1fr)}
+  .preview-files{min-width:0;overflow:auto;padding:13px;background:rgba(10,17,31,.7);border-right:1px solid rgba(177,195,235,.12)}
+  .preview-files-title{padding:5px 7px 12px;color:#7385a5;font-size:10px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase}
+  .preview-file{display:flex;align-items:center;gap:9px;width:100%;padding:10px 9px;margin:2px 0;border:1px solid transparent;border-radius:10px;background:transparent;color:#c6d2e8;text-align:left;font:600 11px 'DM Sans',sans-serif;cursor:pointer;overflow-wrap:anywhere}
+  .preview-file:hover{background:rgba(255,255,255,.04);border-color:rgba(177,195,235,.1)}
+  .preview-file.active{background:rgba(122,139,255,.14);border-color:rgba(138,154,255,.27);color:#fff}
+  .preview-file-icon{width:25px;height:25px;flex:none;display:grid;place-items:center;border-radius:8px;background:rgba(125,145,220,.13);color:#b9c7ff}
+  .preview-main{min-width:0;min-height:0;display:flex;flex-direction:column;background:#0b1220}
+  .preview-toolbar{min-height:43px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 14px;border-bottom:1px solid rgba(177,195,235,.1);color:#90a1be;font-size:11px}
+  .preview-stage{position:relative;flex:1;min-height:0;overflow:auto;background:#101827}
+  .preview-stage iframe{display:block;width:100%;height:100%;min-height:320px;border:0;background:white}
+  .preview-stage img{display:block;max-width:100%;max-height:100%;object-fit:contain;margin:auto;padding:20px}
+  .preview-code{margin:0;min-height:100%;padding:22px 24px;color:#dbe7ff;background:#0a1120;font:12px/1.65 'SFMono-Regular',Consolas,'Liberation Mono',monospace;white-space:pre;overflow:auto;tab-size:2;user-select:text}
+  .preview-code code{font:inherit;color:inherit;user-select:text}
+  .preview-empty{min-height:100%;display:grid;place-items:center;padding:30px;text-align:center;color:#8d9db9;font-size:13px;line-height:1.8}
+  .preview-hint{padding:9px 14px;border-top:1px solid rgba(177,195,235,.1);color:#8192ae;font-size:10px;line-height:1.5}
+  .file-item .file-item-actions{display:flex;align-items:center;gap:8px;flex:none}
+  .file-preview-btn{border:1px solid rgba(124,140,255,.25);border-radius:8px;background:rgba(124,140,255,.09);color:#ccd3ff;padding:5px 8px;font:700 10px 'DM Sans',sans-serif;cursor:pointer}
+  .file-preview-btn:hover{background:rgba(124,140,255,.2)}
+  @media(max-width:760px){.preview-modal{padding:8px}.preview-card{height:calc(100vh - 16px);border-radius:15px}.preview-workspace{grid-template-columns:125px minmax(0,1fr)}.preview-files{padding:7px}.preview-file{font-size:10px;padding:8px 6px}.preview-head{padding:11px}.preview-tab{padding:7px 8px}.preview-code{padding:14px;font-size:11px}}
+</style>
+
+</head>
+<body>
+  <section id="loginView" class="login-wrap">
+    <div class="login-card">
+      <div class="brand-row"><div class="brand-mark">B</div><div><h1>BYSAM</h1><p>WEB PLATFORM · ADMIN</p></div></div>
+      <h2>Yönetim paneline giriş</h2>
+      <p class="sub">BYSAM sitelerini, özel adreslerini ve yayın dosyalarını buradan yönet.</p>
+      <form id="loginForm">
+        <div class="field"><label for="loginEmail">Yönetici e-posta adresi</label><input class="input" id="loginEmail" type="email" autocomplete="username" placeholder="admin@bysam..." required></div>
+        <div class="field"><label for="loginPassword">Şifre</label><input class="input" id="loginPassword" type="password" autocomplete="current-password" placeholder="Şifren" required></div>
+        <button class="btn btn-primary btn-full" id="loginButton" type="submit">Giriş yap <span aria-hidden="true">→</span></button>
+      </form>
+      <div id="loginError" class="login-error hidden"></div>
+      <div class="notice">Bu panel yalnızca Supabase üzerinde yönetici olarak yetkilendirilmiş hesaplara açılır.</div>
+    </div>
+  </section>
+
+  <div id="appView" class="app hidden">
+    <aside class="sidebar">
+      <div class="side-brand"><div class="brand-row"><div class="brand-mark">B</div><div><h1>BYSAM</h1><p>CONTROL CENTER</p></div></div></div>
+      <div><div class="side-label">Çalışma alanı</div><nav class="nav"><button class="active" id="navSites"><span class="nav-ico">▦</span> Siteler</button><button id="navNew"><span class="nav-ico">＋</span> Yeni site</button></nav></div>
+      <div class="sidebar-foot"><small>OTURUM AÇAN YÖNETİCİ</small><strong id="adminEmail">—</strong><button class="btn btn-ghost btn-full" id="logoutButton">Oturumu kapat</button></div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><div><div class="eyebrow">BYSAM / CONTROL CENTER</div><h1 class="page-title">Site yönetimi</h1><p class="page-sub">Dijital alanlarını oluştur, dosyalarını yükle ve yayınla.</p></div><div class="top-actions"><button class="btn btn-primary" id="topNewButton">＋ Yeni site oluştur</button><div class="avatar" id="avatar">B</div></div></header>
+      <section class="stats">
+        <div class="stat"><div class="stat-top">Toplam site <span class="stat-icon">▦</span></div><strong id="totalCount">0</strong><div class="stat-foot">BYSAM kayıtları</div></div>
+        <div class="stat"><div class="stat-top">Yayında <span class="stat-icon">↗</span></div><strong id="publishedCount">0</strong><div class="stat-foot">Aramada görünür siteler</div></div>
+        <div class="stat"><div class="stat-top">Taslak <span class="stat-icon">✎</span></div><strong id="draftCount">0</strong><div class="stat-foot">Henüz yayınlanmayan siteler</div></div>
+      </section>
+      <section class="panel" id="sitesPanel">
+        <div class="panel-head"><div><h3>BYSAM siteleri</h3><p>Eklenen siteleri ve özel adreslerini yönet.</p></div><div class="search"><span>⌕</span><input class="input" id="siteSearch" type="search" placeholder="Site veya adres ara..."></div></div>
+        <div class="table-wrap"><table><thead><tr><th>Site</th><th>Durum</th><th>Dosya</th><th>Oluşturulma</th><th>İşlemler</th></tr></thead><tbody id="sitesTable"><tr><td colspan="5"><div class="empty">Siteler yükleniyor…</div></td></tr></tbody></table></div>
+      </section>
+      <section class="panel editor hidden" id="editorPanel">
+        <div class="panel-head"><div><h3 id="editorTitle">Yeni site oluştur</h3><p>Adresini seç, site dosyalarını ekle ve yayın durumunu belirle.</p></div><button class="btn btn-ghost" id="closeEditor">Kapat ✕</button></div>
+        <div class="editor-body">
+          <form id="siteForm">
+            <input type="hidden" id="siteId">
+            <div class="editor-grid">
+              <div class="field"><label for="siteName">Site adı *</label><input class="input" id="siteName" maxlength="80" placeholder="Örn. Beray Web" required></div>
+              <div class="field"><label for="siteSlug">Site adresi / kısa ad *</label><input class="input" id="siteSlug" maxlength="55" placeholder="beray-web" required pattern="[a-z0-9]+(-[a-z0-9]+)*"><small style="color:var(--muted)">Küçük harf, rakam ve tire kullanılır.</small></div>
+              <div class="field"><label for="siteExtension">Alan adı uzantısı *</label><select id="siteExtension" class="input"><option value=".bysam">.bysam</option><option value=".bysm">.bysm</option><option value=".kızmalımı">.kızmalımı</option><option value=".etmez">.etmez</option><option value=".upset">.upset</option><option value=".siber">.siber</option><option value=".bry">.bry</option><option value=".beray">.beray</option><option value=".xmax">.xmax</option></select></div>
+              <div class="field"><label for="siteStatus">Yayın durumu</label><select class="input" id="siteStatus"><option value="draft">Taslak</option><option value="published">Yayında</option><option value="disabled">Devre dışı</option></select></div>
+              <div class="span-2"><div class="domain-preview" id="domainPreview">beray-web.bysam</div></div>
+              <div class="field span-2"><label for="siteDescription">Açıklama (isteğe bağlı)</label><textarea id="siteDescription" maxlength="500" placeholder="Bu site ne hakkında?"></textarea></div>
+              <div class="field span-2"><label>Site dosyaları *</label><label class="upload-box" for="siteFiles"><div class="upload-ico">⇧</div><strong>HTML, CSS, JS, görsel ve diğer dosyaları seç</strong><p>Birden fazla dosya seçebilirsin. Ana sayfanın adı kökte index.html olmalı.</p><input id="siteFiles" type="file" multiple hidden accept=".html,.htm,.css,.js,.mjs,.json,.txt,.xml,.svg,.png,.jpg,.jpeg,.webp,.gif,.ico,.woff,.woff2,.ttf,.otf,.pdf,.mp3,.mp4,.webm,.wav"></label><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:9px"><button type="button" class="btn btn-ghost" id="chooseFolderButton">▣ Klasör yapısıyla yükle</button><span style="font-size:11px;color:var(--muted)">CSS, JS ve görsel klasörleri korunur.</span><input id="siteFolder" type="file" webkitdirectory directory multiple hidden></div><div id="selectedFiles" class="file-list"></div><div id="savedFiles" class="file-list"></div></div>
+            </div>
+            <div class="editor-actions"><button type="button" class="btn btn-ghost" id="cancelEditor">Vazgeç</button><button type="submit" class="btn btn-primary" id="saveSiteButton">Siteyi kaydet ve dosyaları yükle →</button></div>
+          </form>
+          <p class="footer-note">Not: Yayına almak için kök dizinde <b>index.html</b> bulunmalıdır. CSS, JavaScript ve görselleri HTML içindeki göreli dosya yollarıyla bağlayabilirsin (ör. <code>assets/style.css</code>).</p>
+        </div>
+      </section>
+      <p class="footer-note">BYSAM Admin · Supabase bağlantılı yönetim paneli · Yönetici yetkileri veritabanı RLS politikalarıyla kontrol edilir.</p>
+    </main>
+  </div>
+
+  <section id="previewModal" class="preview-modal hidden" aria-label="BYSAM site önizleme" aria-modal="true" role="dialog">
+    <div class="preview-card">
+      <header class="preview-head">
+        <div><strong id="previewSiteName">Site önizlemesi</strong><small id="previewSiteDomain">BYSAM yayın stüdyosu</small></div>
+        <div class="preview-head-actions">
+          <div class="preview-tabs"><button type="button" id="previewLiveTab" class="preview-tab active">Canlı önizleme</button><button type="button" id="previewCodeTab" class="preview-tab">Kaynak kodu</button></div>
+          <button type="button" id="previewOpenTab" class="btn btn-ghost" title="Yeni sekmede aç">↗ Aç</button>
+          <button type="button" id="previewClose" class="preview-close" aria-label="Kapat">×</button>
+        </div>
+      </header>
+      <div class="preview-workspace">
+        <aside class="preview-files"><div class="preview-files-title">Proje dosyaları</div><div id="previewFileList"></div></aside>
+        <main class="preview-main">
+          <div class="preview-toolbar"><span id="previewCurrentFile">index.html</span><span id="previewModeLabel">Yayınlanan site</span></div>
+          <div id="previewStage" class="preview-stage"><div class="preview-empty">Önizleme hazırlanıyor…</div></div>
+          <div class="preview-hint" id="previewHint">Canlı önizleme, yüklenen HTML dosyalarını ve aynı proje içindeki CSS, JS ve görselleri kullanır.</div>
+        </main>
+      </div>
+    </div>
+  </section>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+    import { renderHtmlIntoFrame, renderSiteIntoFrame } from './bysam-runtime.js';
+
+    // Tarayıcıda yalnızca publishable key kullanılır. service_role anahtarını buraya yazma.
+    const SUPABASE_URL = 'https://rlncoubbggerpouyxyar.supabase.co';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_pnZXQcnHkb6ZR21SQteS_A_DdxMVrA3';
+    const BUCKET = 'bysam-sites';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    });
+
+    const $ = (id) => document.getElementById(id);
+    let currentUser = null;
+    let siteCache = [];
+    let editorFiles = [];
+    let savedFiles = [];
+    let previewFiles = [];
+    let previewSiteRecord = null;
+    let previewEntryUrl = "";
+    let previewCurrentFile = null;
+    let previewMode = "live";
+    let previewObjectUrl = null;
+    let toastTimer;
+
+    function toast(message, isError = false) {
+      const el = $('toast'); el.textContent = message;
+      el.style.borderColor = isError ? 'rgba(255,113,133,.45)' : 'rgba(84,214,232,.3)';
+      el.classList.add('show'); clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove('show'), 3400);
+    }
+    function showLoginError(message) { $('loginError').textContent = message; $('loginError').classList.remove('hidden'); }
+    function hideLoginError() { $('loginError').classList.add('hidden'); }
+    function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+    function formatDate(value) { try { return new Intl.DateTimeFormat('tr-TR',{dateStyle:'medium'}).format(new Date(value)); } catch { return '—'; } }
+    function slugify(value) {
+      const map = {'ı':'i','İ':'i','ğ':'g','Ğ':'g','ü':'u','Ü':'u','ş':'s','Ş':'s','ö':'o','Ö':'o','ç':'c','Ç':'c'};
+      return String(value || '').replace(/[ıİğĞüÜşŞöÖçÇ]/g, c => map[c]).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,55);
+    }
+    function showApp() {
+      $('loginView').classList.add('hidden'); $('appView').classList.remove('hidden');
+      $('adminEmail').textContent = currentUser?.email || 'Yönetici';
+      $('avatar').textContent = (currentUser?.email || 'B').slice(0,1).toUpperCase();
+      loadSites();
+    }
+    function showLogin() { $('appView').classList.add('hidden'); $('loginView').classList.remove('hidden'); currentUser = null; }
+
+    async function verifyAdmin() {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) { showLogin(); return false; }
+      const { data, error } = await supabase.rpc('is_bysam_admin');
+      if (error) {
+        await supabase.auth.signOut();
+        showLoginError('Yönetici kontrolü yapılamadı. Önce bysam.sql dosyasını Supabase SQL Editor içinde çalıştır.');
+        showLogin(); return false;
+      }
+      if (data !== true) {
+        await supabase.auth.signOut();
+        showLoginError('Bu hesap BYSAM yöneticisi olarak yetkilendirilmemiş. SQL dosyasındaki yönetici ekleme adımını uygula.');
+        showLogin(); return false;
+      }
+      currentUser = user; showApp(); return true;
+    }
+
+    $('loginForm').addEventListener('submit', async (event) => {
+      event.preventDefault(); hideLoginError();
+      const button = $('loginButton'); button.disabled = true; button.textContent = 'Giriş yapılıyor…';
+      const { error } = await supabase.auth.signInWithPassword({ email: $('loginEmail').value.trim(), password: $('loginPassword').value });
+      button.disabled = false; button.innerHTML = 'Giriş yap <span aria-hidden="true">→</span>';
+      if (error) { showLoginError(error.message || 'Giriş yapılamadı.'); return; }
+      await verifyAdmin();
+    });
+    $('logoutButton').addEventListener('click', async () => { await supabase.auth.signOut(); showLogin(); toast('Oturum kapatıldı.'); });
+
+    async function loadSites() {
+      $('sitesTable').innerHTML = '<tr><td colspan="5"><div class="empty">Siteler yükleniyor…</div></td></tr>';
+      const { data, error } = await supabase.from('bysam_sites').select('id,site_name,slug,domain_extension,domain,status,created_at,description').order('created_at',{ascending:false});
+      if (error) { $('sitesTable').innerHTML = `<tr><td colspan="5"><div class="empty">${escapeHtml(error.message)}</div></td></tr>`; return; }
+      siteCache = data || [];
+      $('totalCount').textContent = siteCache.length;
+      $('publishedCount').textContent = siteCache.filter(s => s.status === 'published').length;
+      $('draftCount').textContent = siteCache.filter(s => s.status === 'draft').length;
+      renderSites();
+    }
+    async function getFileCounts(ids) {
+      if (!ids.length) return {};
+      const { data, error } = await supabase.from('bysam_site_files').select('site_id').in('site_id',ids);
+      if (error) return {};
+      return (data || []).reduce((acc,row) => { acc[row.site_id] = (acc[row.site_id] || 0) + 1; return acc; },{});
+    }
+    async function renderSites() {
+      const query = $('siteSearch').value.trim().toLowerCase();
+      const visible = siteCache.filter(s => `${s.site_name} ${s.domain} ${s.slug}`.toLowerCase().includes(query));
+      const counts = await getFileCounts(visible.map(s => s.id));
+      if (!visible.length) { $('sitesTable').innerHTML = `<tr><td colspan="5"><div class="empty"><div class="big">⌕</div>${query ? 'Aramana uygun site bulunamadı.' : 'Henüz site eklenmemiş. İlk siteni oluştur!'}<br><br>${query ? '' : '<button class="btn btn-soft" id="emptyNewButton">＋ Yeni site oluştur</button>'}</div></td></tr>`; const b=$('emptyNewButton'); if(b)b.onclick=()=>openEditor(); return; }
+      $('sitesTable').innerHTML = visible.map(site => {
+        const status = site.status === 'published' ? '<span class="status status-published">Yayında</span>' : site.status === 'disabled' ? '<span class="status status-disabled">Kapalı</span>' : '<span class="status status-draft">Taslak</span>';
+        return `<tr>
+          <td><div class="site-name">${escapeHtml(site.site_name)}</div><div class="domain">${escapeHtml(site.domain)}</div></td>
+          <td>${status}</td><td>${counts[site.id] || 0} dosya</td><td>${formatDate(site.created_at)}</td>
+          <td><div class="actions"><button class="icon-btn" title="Düzenle" data-action="edit" data-id="${site.id}">✎</button><button class="icon-btn" title="Adresi kopyala" data-action="copy" data-id="${site.id}">⧉</button><button class="icon-btn" title="Önizle" data-action="preview" data-id="${site.id}">↗</button><button class="icon-btn" title="Sil" data-action="delete" data-id="${site.id}">⌫</button></div></td>
+        </tr>`;
+      }).join('');
+    }
+    $('siteSearch').addEventListener('input', renderSites);
+    $('sitesTable').addEventListener('click', async (event) => {
+      const button = event.target.closest('button[data-action]'); if (!button) return;
+      const site = siteCache.find(s => s.id === button.dataset.id); if (!site) return;
+      if (button.dataset.action === 'edit') await openEditor(site);
+      if (button.dataset.action === 'copy') { try { await navigator.clipboard.writeText(site.domain); toast(`${site.domain} kopyalandı.`); } catch { toast(site.domain); } }
+      if (button.dataset.action === 'preview') await previewSite(site);
+      if (button.dataset.action === 'delete') await deleteSite(site);
+    });
+
+    function updateDomainPreview() { $('domainPreview').textContent = `${$('siteSlug').value || 'site-adresi'}${$('siteExtension').value}`; }
+    $('siteName').addEventListener('input', () => { if (!$('siteId').value || !$('siteSlug').dataset.touched) $('siteSlug').value = slugify($('siteName').value); updateDomainPreview(); });
+    $('siteSlug').addEventListener('input', () => { $('siteSlug').dataset.touched = '1'; $('siteSlug').value = slugify($('siteSlug').value); updateDomainPreview(); });
+    $('siteExtension').addEventListener('change', updateDomainPreview);
+    $('siteFiles').addEventListener('change', () => {
+      editorFiles = Array.from($('siteFiles').files || []); $('siteFolder').value = ''; renderSelectedFiles();
+    });
+    $('chooseFolderButton').addEventListener('click', () => $('siteFolder').click());
+    $('siteFolder').addEventListener('change', () => {
+      editorFiles = Array.from($('siteFolder').files || []); $('siteFiles').value = ''; renderSelectedFiles();
+    });
+    function safeRelativePath(file) {
+      let raw = (file.webkitRelativePath || file.name || '').replace(/\\/g,'/');
+      if (file.webkitRelativePath && editorFiles.length) {
+        const paths = editorFiles.map(item => (item.webkitRelativePath || '').replace(/\\/g,'/')).filter(Boolean);
+        const root = paths[0]?.split('/')[0];
+        if (root && paths.every(path => path.split('/')[0] === root) && raw.startsWith(root + '/')) raw = raw.slice(root.length + 1);
+      }
+      const segments = raw.split('/').filter(part => part && part !== '.' && part !== '..');
+      return segments.map(part => part.replace(/[<>:"|?*\u0000-\u001f]/g,'_')).join('/');
+    }
+    function renderSelectedFiles() {
+      $('selectedFiles').innerHTML = editorFiles.map((file,index) => `<div class="file-item"><span>＋ ${escapeHtml(safeRelativePath(file))}</span><div class="file-item-actions"><small>${(file.size/1024).toFixed(1)} KB</small><button type="button" class="file-preview-btn" data-preview-local="${index}">Önizle</button></div></div>`).join('');
+    }
+    $('selectedFiles').addEventListener('click', async (event) => {
+      const button = event.target.closest('[data-preview-local]');
+      if (!button) return;
+      const file = editorFiles[Number(button.dataset.previewLocal)];
+      if (file) await previewLocalFile(file);
+    });
+    function renderSavedFiles() {
+      $('savedFiles').innerHTML = savedFiles.map(file => `<div class="file-item"><span>◫ ${escapeHtml(file.file_path)}${file.is_entry ? ' · ana sayfa' : ''}<small>${(file.size_bytes/1024).toFixed(1)} KB</small></span><div class="file-item-actions"><button type="button" class="file-preview-btn" data-preview-saved="${file.id}">Önizle</button><button type="button" class="icon-btn" data-remove-file="${file.id}" title="Dosyayı sil">⌫</button></div></div>`).join('');
+    }
+    $('savedFiles').addEventListener('click', async (event) => {
+      const previewButton = event.target.closest('[data-preview-saved]');
+      if (previewButton) {
+        const file = savedFiles.find(f => f.id === previewButton.dataset.previewSaved);
+        if (file) await previewSavedFile(file, siteCache.find(s => s.id === $('siteId').value) || {site_name:$('siteName').value,domain:$('domainPreview').textContent});
+        return;
+      }
+      const button = event.target.closest('[data-remove-file]'); if (!button) return;
+      const file = savedFiles.find(f => f.id === button.dataset.removeFile); if (!file) return;
+      if (!confirm(`${file.file_path} dosyası silinsin mi?`)) return;
+      const { error: storageError } = await supabase.storage.from(BUCKET).remove([file.storage_path]);
+      if (storageError) { toast(storageError.message,true); return; }
+      const { error } = await supabase.from('bysam_site_files').delete().eq('id',file.id);
+      if (error) { toast(error.message,true); return; }
+      savedFiles = savedFiles.filter(f => f.id !== file.id); renderSavedFiles(); toast('Dosya silindi.');
+      if (file.is_entry) await supabase.from('bysam_sites').update({status:'draft'}).eq('id',$('siteId').value);
+      loadSites();
+    });
+
+    async function openEditor(site = null) {
+      $('siteForm').reset(); $('siteFolder').value = ''; $('siteFiles').value = ''; editorFiles = []; savedFiles = [];
+      $('selectedFiles').innerHTML = ''; $('savedFiles').innerHTML = '';
+      $('siteId').value = site?.id || '';
+      $('siteName').value = site?.site_name || '';
+      $('siteSlug').value = site?.slug || '';
+      $('siteSlug').dataset.touched = site ? '1' : '';
+      $('siteExtension').value = site?.domain_extension || '.bysam';
+      $('siteStatus').value = site?.status || 'draft';
+      $('siteDescription').value = site?.description || '';
+      $('editorTitle').textContent = site ? 'Siteyi düzenle' : 'Yeni site oluştur';
+      $('saveSiteButton').textContent = site ? 'Değişiklikleri kaydet ve yükle →' : 'Siteyi kaydet ve dosyaları yükle →';
+      $('editorPanel').classList.remove('hidden'); $('editorPanel').scrollIntoView({behavior:'smooth',block:'start'});
+      updateDomainPreview();
+      if (site) {
+        const { data, error } = await supabase.from('bysam_site_files').select('*').eq('site_id',site.id).order('file_path');
+        if (error) toast(error.message,true); else { savedFiles = data || []; renderSavedFiles(); }
+      }
+    }
+    function closeEditor() { $('editorPanel').classList.add('hidden'); }
+    $('navNew').onclick = $('topNewButton').onclick = () => openEditor();
+    $('navSites').onclick = () => { closeEditor(); $('sitesPanel').scrollIntoView({behavior:'smooth'}); };
+    $('closeEditor').onclick = $('cancelEditor').onclick = closeEditor;
+
+    function guessMime(file) {
+      const ext = file.name.split('.').pop().toLowerCase();
+      const known = ({html:'text/html',htm:'text/html',css:'text/css',js:'text/javascript',mjs:'text/javascript',json:'application/json',txt:'text/plain',xml:'text/xml',svg:'image/svg+xml',png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',webp:'image/webp',gif:'image/gif',ico:'image/x-icon',woff:'font/woff',woff2:'font/woff2',ttf:'font/ttf',otf:'font/otf',pdf:'application/pdf',mp3:'audio/mpeg',mp4:'video/mp4',webm:'video/webm',wav:'audio/wav'})[ext];
+      if (known) return known;
+      return file.type && file.type !== 'application/octet-stream' ? file.type : 'application/octet-stream';
+    }
+    async function uploadFiles(siteId) {
+      for (const file of editorFiles) {
+        const filePath = safeRelativePath(file);
+        if (!filePath) continue;
+        const storagePath = `${siteId}/${filePath}`;
+        const mime = guessMime(file);
+        const { error: uploadError } = await supabase.storage.from(BUCKET).upload(storagePath,file,{upsert:true,contentType:mime,cacheControl:'3600'});
+        if (uploadError) throw new Error(`${filePath}: ${uploadError.message}`);
+        const { error: metaError } = await supabase.from('bysam_site_files').upsert({
+          site_id:siteId,file_path:filePath,storage_path:storagePath,mime_type:mime,size_bytes:file.size,is_entry:filePath.toLowerCase()==='index.html'
+        },{onConflict:'site_id,file_path'});
+        if (metaError) throw new Error(`${filePath} kaydı: ${metaError.message}`);
+      }
+    }
+    $('siteForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const button = $('saveSiteButton'); button.disabled = true; button.textContent = 'Kaydediliyor ve yükleniyor…';
+      try {
+        const id = $('siteId').value;
+        const payload = {site_name:$('siteName').value.trim(),slug:$('siteSlug').value.trim(),domain_extension:$('siteExtension').value,status:'draft',description:$('siteDescription').value.trim() || null};
+        if (!payload.site_name || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(payload.slug)) throw new Error('Site adı ve geçerli bir kısa adres gir.');
+        let siteId = id;
+        if (id) {
+          const { error } = await supabase.from('bysam_sites').update(payload).eq('id',id);
+          if (error) throw error;
+        } else {
+          const { data, error } = await supabase.from('bysam_sites').insert(payload).select('id').single();
+          if (error) throw error; siteId = data.id; $('siteId').value = siteId;
+        }
+        await uploadFiles(siteId);
+        const { data: entryFile, error: entryError } = await supabase.from('bysam_site_files').select('id').eq('site_id',siteId).eq('file_path','index.html').maybeSingle();
+        if (entryError) throw entryError;
+        const desiredStatus = $('siteStatus').value;
+        if (desiredStatus === 'published' && !entryFile) throw new Error('Yayınlamak için kök dizine index.html yüklemelisin.');
+        const { error: statusError } = await supabase.from('bysam_sites').update({status:desiredStatus}).eq('id',siteId);
+        if (statusError) throw statusError;
+        toast(desiredStatus === 'published' ? 'Site kaydedildi ve yayınlandı! 🎉' : 'Site başarıyla kaydedildi.');
+        closeEditor(); await loadSites();
+      } catch (error) {
+        toast(error.message || 'İşlem tamamlanamadı.',true);
+      } finally {
+        button.disabled = false; button.textContent = $('siteId').value ? 'Değişiklikleri kaydet ve yükle →' : 'Siteyi kaydet ve dosyaları yükle →';
+      }
+    });
+
+    function showPreviewModal(site) {
+      $('previewSiteName').textContent = site?.site_name || 'Site dosyası önizlemesi';
+      $('previewSiteDomain').textContent = site?.domain || $('domainPreview').textContent || 'BYSAM';
+      $('previewModal').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+    function closePreviewModal() {
+      $('previewModal').classList.add('hidden');
+      document.body.style.overflow = '';
+      $('previewStage').replaceChildren();
+      if (previewObjectUrl) { URL.revokeObjectURL(previewObjectUrl); previewObjectUrl = null; }
+      previewFiles = []; previewCurrentFile = null; previewEntryUrl = ''; previewSiteRecord = null;
+    }
+    $('previewClose').addEventListener('click', closePreviewModal);
+    $('previewModal').addEventListener('click', (event) => { if (event.target === $('previewModal')) closePreviewModal(); });
+    document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !$('previewModal').classList.contains('hidden')) closePreviewModal(); });
+
+    function setPreviewTab(mode) {
+      previewMode = mode;
+      $('previewLiveTab').classList.toggle('active', mode === 'live');
+      $('previewCodeTab').classList.toggle('active', mode === 'source');
+      if (mode === 'live') showLivePreview();
+      else if (previewCurrentFile) showSavedFileContent(previewCurrentFile, 'source');
+      else {
+        const entry = previewFiles.find(f => f.file_path.toLowerCase() === 'index.html');
+        if (entry) showSavedFileContent(entry, 'source');
+        else $('previewStage').innerHTML = '<div class="preview-empty">Kaynak kodu bulunamadı.</div>';
+      }
+    }
+    $('previewLiveTab').addEventListener('click', () => setPreviewTab('live'));
+    $('previewCodeTab').addEventListener('click', () => setPreviewTab('source'));
+    $('previewOpenTab').addEventListener('click', () => {
+      if (previewEntryUrl) window.open(previewEntryUrl, '_blank', 'noopener,noreferrer');
+      else toast('Önce index.html yüklenmeli.', true);
+    });
+
+    function renderPreviewFileList() {
+      $('previewFileList').innerHTML = previewFiles.map(file => {
+        const active = previewCurrentFile?.id === file.id ? ' active' : '';
+        const ext = (file.file_path.split('.').pop() || '').toLowerCase();
+        const icon = ['html','htm'].includes(ext) ? '⌘' : ['css'].includes(ext) ? '#' : ['js','mjs'].includes(ext) ? 'JS' : ['png','jpg','jpeg','webp','gif','svg','ico'].includes(ext) ? '▧' : '▤';
+        return `<button type="button" class="preview-file${active}" data-preview-file="${escapeHtml(file.id)}"><span class="preview-file-icon">${icon}</span><span>${escapeHtml(file.file_path)}</span></button>`;
+      }).join('') || '<div class="preview-empty">Bu site için dosya kaydı bulunamadı.</div>';
+    }
+    $('previewFileList').addEventListener('click', (event) => {
+      const button = event.target.closest('[data-preview-file]');
+      if (!button) return;
+      const file = previewFiles.find(f => f.id === button.dataset.previewFile);
+      if (!file) return;
+      previewCurrentFile = file;
+      renderPreviewFileList();
+      previewMode = 'source';
+      $('previewLiveTab').classList.remove('active');
+      $('previewCodeTab').classList.add('active');
+      showSavedFileContent(file, 'preview');
+    });
+
+    function storagePublicUrl(file) {
+      return supabase.storage.from(BUCKET).getPublicUrl(file.storage_path).data.publicUrl;
+    }
+    function isImageFile(path) { return /\.(png|jpe?g|webp|gif|svg|ico)$/i.test(path); }
+    function isTextFile(path) { return /\.(html?|css|m?js|json|txt|xml|svg|md|ya?ml)$/i.test(path); }
+    async function showSavedFileContent(file, displayMode = 'preview') {
+      previewCurrentFile = file;
+      $('previewCurrentFile').textContent = file.file_path;
+      $('previewModeLabel').textContent = displayMode === 'source' ? 'Kaynak kodu' : 'Dosya önizlemesi';
+      $('previewStage').innerHTML = '<div class="preview-empty">Dosya yükleniyor…</div>';
+      try {
+        const url = storagePublicUrl(file);
+        if (isImageFile(file.file_path)) {
+          const img = document.createElement('img'); img.alt = file.file_path; img.src = url;
+          $('previewStage').replaceChildren(img);
+          $('previewHint').textContent = 'Görsel dosyası önizlemesi.';
+          return;
+        }
+        if (/\.pdf$/i.test(file.file_path)) {
+          const frame = document.createElement('iframe'); frame.src = url; frame.title = file.file_path;
+          $('previewStage').replaceChildren(frame);
+          $('previewHint').textContent = 'PDF dosyası tarayıcı görüntüleyicisinde açılıyor.';
+          return;
+        }
+        if (!isTextFile(file.file_path)) {
+          $('previewStage').innerHTML = '<div class="preview-empty">Bu dosya türü için metin önizlemesi desteklenmiyor.<br>Dosya: ' + escapeHtml(file.file_path) + '</div>';
+          return;
+        }
+        const response = await fetch(url, { cache:'no-store' });
+        if (!response.ok) throw new Error(`Dosya alınamadı (${response.status}).`);
+        const source = await response.text();
+        if (/\.html?$/i.test(file.file_path) && displayMode === 'preview') {
+          const frame = document.createElement('iframe');
+          frame.title = file.file_path;
+          frame.style.cssText = 'width:100%;height:100%;min-height:360px;border:0;background:#fff';
+          renderHtmlIntoFrame(source, url, frame);
+          $('previewStage').replaceChildren(frame);
+          $('previewHint').textContent = 'HTML sayfası çalıştırılıyor. Göreli CSS, JavaScript ve görseller aynı site klasöründen yüklenir.';
+        } else {
+          const pre = document.createElement('pre'); pre.className = 'preview-code';
+          const code = document.createElement('code'); code.textContent = source; pre.appendChild(code);
+          $('previewStage').replaceChildren(pre);
+          $('previewHint').textContent = 'Bu dosyanın kaynak içeriği gösteriliyor. HTML dosyaları sayfa olarak çalıştırılır.';
+        }
+      } catch (error) {
+        $('previewStage').innerHTML = '<div class="preview-empty">Önizleme açılamadı.<br>' + escapeHtml(error.message || 'Dosya okunamadı') + '</div>';
+      }
+    }
+    async function showLivePreview() {
+      $('previewLiveTab').classList.add('active'); $('previewCodeTab').classList.remove('active');
+      $('previewCurrentFile').textContent = 'index.html'; $('previewModeLabel').textContent = 'Yayındaki sayfa';
+      if (!previewEntryUrl) {
+        $('previewStage').innerHTML = '<div class="preview-empty">Canlı önizleme için kök dizinde index.html bulunmalı.</div>';
+        return;
+      }
+      const frame = document.createElement('iframe');
+      frame.title = `${previewSiteRecord?.site_name || 'BYSAM'} canlı önizleme`;
+      frame.style.cssText = 'width:100%;height:100%;min-height:420px;border:0;background:#fff';
+      $('previewStage').replaceChildren(frame);
+      try {
+        await renderSiteIntoFrame(previewSiteRecord, frame, { allowDraft: true });
+        $('previewHint').textContent = 'HTML, CSS, JavaScript ve görseller canlı sayfa olarak çalıştırılıyor.';
+      } catch (error) {
+        $('previewStage').innerHTML = '<div class="preview-empty">Canlı önizleme açılamadı.<br>' + escapeHtml(error.message || 'Dosya okunamadı') + '</div>';
+      }
+    }
+    async function previewSite(site) {
+      const { data, error } = await supabase.from('bysam_site_files').select('id,site_id,file_path,storage_path,mime_type,size_bytes,is_entry').eq('site_id',site.id).order('file_path');
+      if (error) { toast(error.message, true); return; }
+      previewSiteRecord = site;
+      previewFiles = data || [];
+      const entry = previewFiles.find(f => f.file_path.toLowerCase() === 'index.html');
+      previewEntryUrl = entry ? storagePublicUrl(entry) : '';
+      previewCurrentFile = entry || previewFiles[0] || null;
+      renderPreviewFileList();
+      showPreviewModal(site);
+      setPreviewTab('live');
+    }
+    async function previewSavedFile(file, site) {
+      const pseudoSite = {site_name:site?.site_name || 'Yeni site',domain:site?.domain || $('domainPreview').textContent};
+      previewSiteRecord = pseudoSite;
+      const entry = savedFiles.find(f => f.file_path.toLowerCase() === 'index.html');
+      previewFiles = savedFiles.slice();
+      previewCurrentFile = file;
+      previewEntryUrl = entry ? storagePublicUrl(entry) : '';
+      renderPreviewFileList();
+      showPreviewModal(pseudoSite);
+      $('previewLiveTab').classList.remove('active'); $('previewCodeTab').classList.add('active');
+      showSavedFileContent(file, 'preview');
+    }
+    async function previewLocalFile(file) {
+      previewSiteRecord = {site_name:file.name,domain:'Dosya henüz yüklenmedi'};
+      previewFiles = []; previewCurrentFile = null; previewEntryUrl = '';
+      showPreviewModal(previewSiteRecord);
+      $('previewFileList').innerHTML = '<div class="preview-empty">Seçilen dosya</div>';
+      $('previewLiveTab').classList.remove('active'); $('previewCodeTab').classList.add('active');
+      $('previewCurrentFile').textContent = safeRelativePath(file);
+      $('previewModeLabel').textContent = 'Yerel dosya';
+      $('previewHint').textContent = 'Bu dosya henüz yüklenmedi. HTML dosyalarının diğer CSS, JavaScript ve görsel bağımlılıkları yükleme sonrası canlı önizlemede birlikte çalışır.';
+      $('previewStage').innerHTML = '<div class="preview-empty">Dosya okunuyor…</div>';
+      try {
+        if (isImageFile(file.name)) {
+          if (previewObjectUrl) URL.revokeObjectURL(previewObjectUrl);
+          previewObjectUrl = URL.createObjectURL(file);
+          const img = document.createElement('img'); img.src = previewObjectUrl; img.alt = file.name;
+          $('previewStage').replaceChildren(img); return;
+        }
+        if (isTextFile(file.name)) {
+          const source = await file.text();
+          if (/\.html?$/i.test(file.name)) {
+            const frame = document.createElement('iframe');
+            frame.setAttribute('sandbox','allow-scripts allow-forms');
+            frame.srcdoc = source;
+            $('previewStage').replaceChildren(frame);
+          } else {
+            const pre = document.createElement('pre'); pre.className = 'preview-code';
+            const code = document.createElement('code'); code.textContent = source; pre.appendChild(code);
+            $('previewStage').replaceChildren(pre);
+          }
+        } else {
+          $('previewStage').innerHTML = '<div class="preview-empty">Bu dosya türü için önizleme yok.</div>';
+        }
+      } catch (error) {
+        $('previewStage').innerHTML = '<div class="preview-empty">Dosya okunamadı: ' + escapeHtml(error.message) + '</div>';
+      }
+    }
+    async function deleteSite(site) {
+      if (!confirm(`“${site.site_name}” ve tüm dosyaları kalıcı olarak silinsin mi?`)) return;
+      const { data: files, error: listError } = await supabase.from('bysam_site_files').select('storage_path').eq('site_id',site.id);
+      if (listError) { toast(listError.message,true); return; }
+      if (files?.length) {
+        const { error: removeError } = await supabase.storage.from(BUCKET).remove(files.map(f=>f.storage_path));
+        if (removeError) { toast(removeError.message,true); return; }
+      }
+      const { error } = await supabase.from('bysam_sites').delete().eq('id',site.id);
+      if (error) { toast(error.message,true); return; }
+      toast('Site ve dosyaları silindi.'); loadSites();
+    }
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) await verifyAdmin();
+    supabase.auth.onAuthStateChange((_event, sessionNow) => {
+      if (!sessionNow) showLogin();
+    });
+  </script>
+</body>
+</html>
